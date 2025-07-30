@@ -66,6 +66,7 @@ const PromptInput = forwardRef<PromptInputRef, PromptInputProps>(
                 clear: () => {
                     if (textareaRef.current) {
                         textareaRef.current.value = ""
+                        textareaRef.current.style.height = "44px"
                         localStorage.removeItem("user-input")
                     }
                 },
@@ -131,10 +132,16 @@ function PromptInputTextarea({
 
             const target = e.target as HTMLTextAreaElement
             target.style.height = "auto"
-            target.style.height =
-                typeof maxHeight === "number"
-                    ? `${Math.min(target.scrollHeight, maxHeight)}px`
-                    : `min(${target.scrollHeight}px, ${maxHeight})`
+
+            // If textarea is empty, reset to default height
+            if (target.value.trim() === "") {
+                target.style.height = "44px"
+            } else {
+                target.style.height =
+                    typeof maxHeight === "number"
+                        ? `${Math.min(target.scrollHeight, maxHeight)}px`
+                        : `min(${target.scrollHeight}px, ${maxHeight})`
+            }
 
             localStorage.setItem("user-input", target.value)
         },
