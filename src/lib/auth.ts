@@ -26,15 +26,15 @@ export const auth = betterAuth({
         google: {
             clientId: process.env.GOOGLE_CLIENT_ID || "",
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || ""
-        },
-        github: {
-            clientId: process.env.GITHUB_CLIENT_ID || "",
-            clientSecret: process.env.GITHUB_CLIENT_SECRET || ""
-        },
-        twitch: {
-            clientId: process.env.TWITCH_CLIENT_ID as string,
-            clientSecret: process.env.TWITCH_CLIENT_SECRET as string
         }
+        // github: {
+        //     clientId: process.env.GITHUB_CLIENT_ID || "",
+        //     clientSecret: process.env.GITHUB_CLIENT_SECRET || ""
+        // },
+        // twitch: {
+        //     clientId: process.env.TWITCH_CLIENT_ID as string,
+        //     clientSecret: process.env.TWITCH_CLIENT_SECRET as string
+        // }
     },
     plugins: [
         emailOTP({

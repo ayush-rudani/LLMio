@@ -16,7 +16,8 @@ export default defineConfig({
         }
     },
     server: {
-        proxy: {}
+        proxy: {},
+        allowedHosts: ["localhost", "local3000.ayushrudani.com"]
     },
     plugins: [
         (process.env.ANALYZE && analyzer()) || null,

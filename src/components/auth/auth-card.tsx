@@ -24,7 +24,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
-import { GithubIcon, GoogleIcon, TwitchIcon } from "../brand-icons"
+import { GoogleIcon } from "../brand-icons"
 
 const emailSchema = z.object({
     email: z.string().email({
@@ -250,7 +250,7 @@ export function AuthCard() {
                                                 )}
                                                 Continue with Google
                                             </Button>
-                                            <Button
+                                            {/* <Button
                                                 variant="outline"
                                                 className="h-10 w-full gap-2"
                                                 onClick={() =>
@@ -279,7 +279,7 @@ export function AuthCard() {
                                                     <TwitchIcon className="size-5 shrink-0" />
                                                 )}
                                                 Continue with Twitch
-                                            </Button>
+                                            </Button> */}
                                         </motion.div>
 
                                         <motion.div
