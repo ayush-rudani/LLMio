@@ -10,10 +10,13 @@ import { sendOTPEmail } from "./email"
 export const auth = betterAuth({
     trustedOrigins: [
         "*.intern3.chat",
-        process.env.VERCEL_URL!,
+        "*.ayushrudani.com",
         "https://intern3.chat",
         "http://localhost:3000",
-        "https://localhost:3000"
+        "https://localhost:3000",
+        process.env.VERCEL_URL!,
+        process.env.PROD_URL!,
+        process.env.LOCAL_URL!
     ].filter(Boolean),
     baseURL: process.env.VITE_BETTER_AUTH_URL || "http://localhost:3000",
 
@@ -26,14 +29,6 @@ export const auth = betterAuth({
         google: {
             clientId: process.env.GOOGLE_CLIENT_ID || "",
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || ""
-        },
-        github: {
-            clientId: process.env.GITHUB_CLIENT_ID || "",
-            clientSecret: process.env.GITHUB_CLIENT_SECRET || ""
-        },
-        twitch: {
-            clientId: process.env.TWITCH_CLIENT_ID as string,
-            clientSecret: process.env.TWITCH_CLIENT_SECRET as string
         }
     },
     plugins: [
