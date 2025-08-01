@@ -265,21 +265,7 @@ export function AuthCard() {
                                                 )}
                                                 Continue with GitHub
                                             </Button>
-                                            <Button
-                                                variant="outline"
-                                                className="h-10 w-full gap-2"
-                                                onClick={() =>
-                                                    socialSignInMutation.mutate("twitch")
-                                                }
-                                                disabled={socialSignInMutation.isPending}
-                                            >
-                                                {socialSignInMutation.isPending ? (
-                                                    <Loader2 className="size-4 shrink-0 animate-spin" />
-                                                ) : (
-                                                    <TwitchIcon className="size-5 shrink-0" />
-                                                )}
-                                                Continue with Twitch
-                                            </Button> */}
+                                            */}
                                         </motion.div>
 
                                         <motion.div
