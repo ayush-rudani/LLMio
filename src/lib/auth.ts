@@ -10,8 +10,10 @@ import { sendOTPEmail } from "./email"
 export const auth = betterAuth({
     trustedOrigins: [
         "*.intern3.chat",
+        "*.ayushrudani.com",
         process.env.VERCEL_URL!,
         "https://intern3.chat",
+        "https://zenchat.ayushrudani.com",
         "http://localhost:3000",
         "https://localhost:3000"
     ].filter(Boolean),
