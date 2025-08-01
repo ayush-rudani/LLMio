@@ -5,15 +5,20 @@ import { chatGET } from "./chat_http/get.route"
 import { chatPOST } from "./chat_http/post.route"
 import { transcribeAudio } from "./speech_to_text"
 
+const VERCEL_URL = process.env.VERCEL_URL
+const PROD_URL = process.env.PROD_URL
+const LOCAL_URL = process.env.LOCAL_URL
+
 const http = httpRouter()
 const cors = corsRouter(http, {
     allowedOrigins: [
         "http://localhost:3000",
         "https://intern3.vercel.app",
         "https://intern3.chat",
-        "https://local3000.ayushrudani.com",
-        "https://zenchat.ayushrudani.com"
-    ],
+        VERCEL_URL,
+        PROD_URL,
+        LOCAL_URL
+    ].filter((origin): origin is string => typeof origin === "string" && origin !== null),
     allowedHeaders: ["Content-Type", "Authorization"],
     allowCredentials: true
 })

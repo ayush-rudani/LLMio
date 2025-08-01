@@ -11,11 +11,12 @@ export const auth = betterAuth({
     trustedOrigins: [
         "*.intern3.chat",
         "*.ayushrudani.com",
-        process.env.VERCEL_URL!,
         "https://intern3.chat",
-        "https://zenchat.ayushrudani.com",
         "http://localhost:3000",
-        "https://localhost:3000"
+        "https://localhost:3000",
+        process.env.VERCEL_URL!,
+        process.env.PROD_URL!,
+        process.env.LOCAL_URL!
     ].filter(Boolean),
     baseURL: process.env.VITE_BETTER_AUTH_URL || "http://localhost:3000",
 
@@ -29,10 +30,6 @@ export const auth = betterAuth({
             clientId: process.env.GOOGLE_CLIENT_ID || "",
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || ""
         }
-        // github: {
-        //     clientId: process.env.GITHUB_CLIENT_ID || "",
-        //     clientSecret: process.env.GITHUB_CLIENT_SECRET || ""
-        // },
     },
     plugins: [
         emailOTP({
