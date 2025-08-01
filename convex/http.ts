@@ -15,6 +15,7 @@ const cors = corsRouter(http, {
         "http://localhost:3000",
         "https://intern3.vercel.app",
         "https://intern3.chat",
+        "https://llmio.ayushrudani.com",
         VERCEL_URL,
         PROD_URL,
         LOCAL_URL
