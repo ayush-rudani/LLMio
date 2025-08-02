@@ -408,7 +408,6 @@ export function ThreadsSidebar() {
                     <Link
                         to="/"
                         onClick={() => {
-                            document.dispatchEvent(new CustomEvent("new_chat"))
                             setOpenMobile(false)
                         }}
                         className={cn(
