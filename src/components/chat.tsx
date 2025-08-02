@@ -82,22 +82,6 @@ const ChatContent = ({ threadId: routeThreadId, folderId }: ChatProps) => {
         localStorage.setItem("DISK_CACHE:user-name", session.user.name)
     }, [session?.user?.name, isPending])
 
-    // const { resetChat } = useChatStore()
-
-    // const resetAll = () => {
-    //     console.log("[chat] resetAll")
-    //     chatHelpers.setData([])
-    //     chatHelpers.setMessages([])
-    //     resetChat()
-    // }
-
-    // useEffect(() => {
-    //     document.addEventListener("new_chat", resetAll)
-    //     return () => {
-    //         document.removeEventListener("new_chat", resetAll)
-    //     }
-    // }, [threadId])
-
     if (!session?.user && !isPending) {
         return (
             <div className="relative flex h-[calc(100dvh-64px)] items-center justify-center">
