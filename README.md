@@ -1,4 +1,4 @@
-# Intern3 Chat
+# LLMio (Intern3-Fork) Chat
 
 A modern, feature-rich AI chat application built by interns, for interns. It's the second-best chat app in the world, after T3 chat. It's fast, has lots of features, and is open-source.
 
