@@ -39,6 +39,15 @@ function RouteComponent() {
             gradientTo: "#06b6d4",
             twitterUrl: "https://x.com/blakssh",
             githubUrl: "https://github.com/lakshaybhushan"
+        },
+        {
+            name: "Ayush Rudani",
+            role: "I forked this repo and tweaked it ;)",
+            imageUrl: "https://ayushrudani.com/logo.png",
+            gradientFrom: "#0955faff",
+            gradientTo: "#5c66f6ff",
+            twitterUrl: "https://go.ayushrudani.com/twitter",
+            githubUrl: "https://go.ayushrudani.com/github"
         }
     ]
 

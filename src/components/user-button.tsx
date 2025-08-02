@@ -119,7 +119,7 @@ export function UserButton() {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                     <a
-                        href="https://github.com/intern3-chat/intern3-chat"
+                        href="https://github.com/ayush-rudani/LLMio"
                         target="_blank"
                         rel="noopener noreferrer"
                     >
@@ -128,7 +128,11 @@ export function UserButton() {
                     </a>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                    <a href="https://x.com/intern3chat" target="_blank" rel="noopener noreferrer">
+                    <a
+                        href="https://go.ayushrudani.com/twitter"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
                         <XIcon className="h-4 w-4" />
                         <span>Twitter</span>
                     </a>
