@@ -24,7 +24,6 @@ import { useConvexAuth } from "convex/react"
 import { isAfter, isToday, isYesterday, subDays } from "date-fns"
 import { Image, Loader2, Pin, Search } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { LogoMark } from "./logo"
 import { FolderItem } from "./threads/folder-item"
 import { NewFolderButton } from "./threads/new-folder-button"
 import { ThreadItem } from "./threads/thread-item"
@@ -398,7 +397,9 @@ export function ThreadsSidebar() {
                 <SidebarHeader>
                     <div className="flex w-full items-center justify-center gap-2">
                         <Link to="/">
-                            <LogoMark className="h-auto w-full max-w-52 px-4 pt-1.5" />
+                            <div className="h-auto w-full">
+                                <div className="font-bold text-2xl text-foreground">LLMio Chat</div>
+                            </div>
                         </Link>
                     </div>
                     <div className="my-2 h-px w-full bg-border" />
