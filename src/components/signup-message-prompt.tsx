@@ -32,7 +32,7 @@ export const SignupMessagePrompt = () => {
                         <Logo />
                     </div>
                     <h1 className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text font-bold text-4xl text-transparent tracking-tight">
-                        intern3.chat
+                        LLMio Chat (intern3.chat-fork)
                     </h1>
                     <p className="mt-1 font-medium text-muted-foreground text-sm italic">
                         built for interns, by interns
@@ -44,7 +44,7 @@ export const SignupMessagePrompt = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.4 }}
-                className="flex w-full gap-3"
+                className="flex w-full justify-center gap-3"
             >
                 <MagneticButton>
                     <Button

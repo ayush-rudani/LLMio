@@ -1,7 +1,7 @@
 {
-    "name": "intern3.chat",
-    "short_name": "intern3.chat",
-    "description": "intern3.chat",
+    "name": "LLMio",
+    "short_name": "LLMio",
+    "description": "Large Language Model Chat Application",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",

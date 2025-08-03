@@ -194,7 +194,7 @@ export function AuthCard() {
         if (step === "onboarding") {
             return "Complete your profile"
         }
-        return "Sign in to intern3.chat"
+        return "Sign in to LLMio Chat"
     }, [step])
 
     return (

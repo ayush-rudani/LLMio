@@ -11,9 +11,9 @@ import { getHeaders } from "@tanstack/react-start/server"
 import { Providers } from "../providers"
 
 // Configurable site metadata
-const SITE_TITLE = "intern3.chat"
+const SITE_TITLE = "LLMio Chat"
 const SITE_DESCRIPTION = "Powerful AI chatbot. By interns, for interns."
-const SITE_URL = "https://intern3.chat" // Update this to your actual domain
+const SITE_URL = "https://llmio.ayushrudani.com" // Update this to your actual domain
 
 const getAccessToken = createServerFn().handler(async (ctx) => {
     const headers = await getHeaders()

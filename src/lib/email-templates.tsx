@@ -11,14 +11,14 @@ export const EmailVerificationTemplate = ({
 }: EmailVerificationTemplateProps) => (
     <Html>
         <Head />
-        <Preview>Verify your email address for Intern3 Chat</Preview>
+        <Preview>Verify your email address for LLMio Chat</Preview>
         <Body style={main}>
             <Container style={container}>
                 <Section>
                     <Text style={heading}>Verify your email address</Text>
                     <Text style={text}>{name ? `Hi ${name},` : "Hi,"}</Text>
                     <Text style={text}>
-                        Thank you for signing up for Intern3 Chat. To complete your registration,
+                        Thank you for signing up for LLMio Chat. To complete your registration,
                         please verify your email address by clicking the link below:
                     </Text>
                     <Link href={verificationUrl} style={button}>
@@ -44,14 +44,14 @@ interface PasswordResetTemplateProps {
 export const PasswordResetTemplate = ({ name, resetUrl }: PasswordResetTemplateProps) => (
     <Html>
         <Head />
-        <Preview>Reset your password for Intern3 Chat</Preview>
+        <Preview>Reset your password for LLMio Chat</Preview>
         <Body style={main}>
             <Container style={container}>
                 <Section>
                     <Text style={heading}>Reset your password</Text>
                     <Text style={text}>{name ? `Hi ${name},` : "Hi,"}</Text>
                     <Text style={text}>
-                        We received a request to reset your password for your Intern3 Chat account.
+                        We received a request to reset your password for your LLMio Chat account.
                         Click the link below to create a new password:
                     </Text>
                     <Link href={resetUrl} style={button}>
@@ -80,22 +80,21 @@ export const OTPEmailTemplate = ({ otp, type }: OTPEmailTemplateProps) => {
         switch (type) {
             case "sign-in":
                 return {
-                    preview: "Your sign-in code for Intern3 Chat",
+                    preview: "Your sign-in code for LLMio Chat",
                     heading: "Your sign-in code",
-                    description: "Use this code to sign in to your Intern3 Chat account:"
+                    description: "Use this code to sign in to your LLMio Chat account:"
                 }
             case "email-verification":
                 return {
-                    preview: "Verify your email for Intern3 Chat",
+                    preview: "Verify your email for LLMio Chat",
                     heading: "Verify your email",
-                    description: "Use this code to verify your email address for Intern3 Chat:"
+                    description: "Use this code to verify your email address for LLMio Chat:"
                 }
             case "forget-password":
                 return {
-                    preview: "Reset your password for Intern3 Chat",
+                    preview: "Reset your password for LLMio Chat",
                     heading: "Reset your password",
-                    description:
-                        "Use this code to reset your password for your Intern3 Chat account:"
+                    description: "Use this code to reset your password for your LLMio Chat account:"
                 }
         }
     }
