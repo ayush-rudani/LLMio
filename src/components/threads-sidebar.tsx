@@ -16,6 +16,7 @@ import { useFunction } from "@/hooks/use-function"
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { authClient } from "@/lib/auth-client"
+import { useChatStore } from "@/lib/chat-store"
 import { useDiskCachedPaginatedQuery, useDiskCachedQuery } from "@/lib/convex-cached-query"
 import { cn } from "@/lib/utils"
 import { Link } from "@tanstack/react-router"
@@ -138,6 +139,7 @@ export function ThreadsSidebar() {
     const isMobile = useIsMobile()
     const { setOpen, setOpenMobile } = useSidebar()
     const auth = useConvexAuth()
+    const resetChat = useChatStore((s) => s.resetChat)
 
     // Get all threads (not filtered by project anymore)
     const {
@@ -396,7 +398,13 @@ export function ThreadsSidebar() {
             <Sidebar variant="inset">
                 <SidebarHeader>
                     <div className="flex w-full items-center justify-center gap-2">
-                        <Link to="/">
+                        <Link
+                            to="/"
+                            onClick={() => {
+                                resetChat()
+                                setOpenMobile(false)
+                            }}
+                        >
                             <div className="h-auto w-full">
                                 <div className="font-bold text-2xl text-foreground">LLMio Chat</div>
                             </div>
@@ -409,6 +417,7 @@ export function ThreadsSidebar() {
                     <Link
                         to="/"
                         onClick={() => {
+                            resetChat()
                             setOpenMobile(false)
                         }}
                         className={cn(
