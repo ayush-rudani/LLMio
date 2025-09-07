@@ -358,6 +358,7 @@ export const chatPOST = httpAction(async (ctx, req) => {
                     abortSignal: remoteCancel.signal,
                     experimental_transform: smoothStream(),
                     toolCallStreaming: true,
+                    temperature: 0.5,
                     tools: modelData.abilities.includes("function_calling")
                         ? await getToolkit(ctx, body.enabledTools, filteredSettings)
                         : undefined,
