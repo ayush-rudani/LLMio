@@ -83,8 +83,11 @@ export const ToolSelectorPopover = memo(
 
         // If userSettings is not loaded, show the web search button as fallback to avoid flickering
         if (!userSettings) return webSearchButton
+        // If the query returned an error object, fall back to the web search button
+        if ("error" in userSettings) return webSearchButton
 
         const hasSupermemory = Boolean(userSettings.generalProviders?.supermemory?.enabled)
+
         const mcpServers = (userSettings.mcpServers || []).filter(
             (server) => server.enabled !== false
         )
