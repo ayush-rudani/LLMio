@@ -64,7 +64,7 @@ export const MODELS_SHARED: SharedModel[] = [
         id: "gpt-4o-mini",
         name: "GPT 4o mini",
         shortName: "4o mini",
-        adapters: ["openai:gpt-4o-mini", "openai:gpt-4o-mini", "openrouter:openai/gpt-4o-mini"],
+        adapters: ["openai:gpt-4o-mini", "openrouter:openai/gpt-4o-mini"],
         abilities: ["vision", "function_calling", "pdf"]
     },
     // {
@@ -268,7 +268,7 @@ export const MODELS_SHARED: SharedModel[] = [
         id: "sdxl-lightning",
         name: "SDXL Lightning",
         shortName: "SDXL",
-        adapters: ["fal:fal-ai/fast-lightning-sdxl", "fal:fal-ai/fast-lightning-sdxl"],
+        adapters: ["fal:fal-ai/fast-lightning-sdxl"],
         abilities: [],
         mode: "image",
         customIcon: "stability-ai",
@@ -278,7 +278,7 @@ export const MODELS_SHARED: SharedModel[] = [
         id: "flux-schnell",
         name: "FLUX.1 [schnell]",
         shortName: "flux.schnell",
-        adapters: ["fal:fal-ai/flux/schnell", "fal:fal-ai/flux/schnell"],
+        adapters: ["fal:fal-ai/flux/schnell"],
         abilities: [],
         mode: "image",
         customIcon: "bflabs",
