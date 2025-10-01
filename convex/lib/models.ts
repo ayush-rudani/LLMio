@@ -51,7 +51,7 @@ export const MODELS_SHARED: SharedModel[] = [
         name: "GPT 5",
         shortName: "GPT 5",
         adapters: ["openai:gpt-5", "openrouter:openai/gpt-5"],
-        abilities: ["vision", "function_calling", "pdf"]
+        abilities: ["vision", "function_calling", "pdf", "effort_control"]
     },
     {
         id: "gpt-4o",
