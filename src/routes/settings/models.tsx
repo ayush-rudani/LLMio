@@ -240,8 +240,9 @@ function ModelsSettings() {
         enabled: true
     })
 
-    const { availableModels, unavailableModels, currentProviders } =
-        useAvailableModels(userSettings)
+    const { availableModels, unavailableModels, currentProviders } = useAvailableModels(
+        userSettings && !("error" in userSettings) ? userSettings : undefined
+    )
 
     // Get available provider IDs for dropdown
     const availableProviders = useMemo(() => {
@@ -304,7 +305,10 @@ function ModelsSettings() {
     }
 
     const handleEditCustomModel = (modelId: string) => {
-        const model = userSettings?.customModels?.[modelId]
+        const model =
+            userSettings && !("error" in userSettings) && "customModels" in userSettings
+                ? userSettings.customModels?.[modelId]
+                : undefined
         if (!model) return
 
         setCustomModelForm({
