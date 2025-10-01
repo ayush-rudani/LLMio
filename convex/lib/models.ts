@@ -33,7 +33,15 @@ export type SharedModel<Abilities extends ModelAbility[] = ModelAbility[]> = {
     contextLength?: number
     maxTokens?: number
     supportedImageSizes?: ImageSize[]
-    customIcon?: "stability-ai" | "openai" | "bflabs" | "google" | "meta" | "deepseek"
+    customIcon?:
+        | "stability-ai"
+        | "openai"
+        | "bflabs"
+        | "google"
+        | "meta"
+        | "deepseek"
+        | "xai"
+        | "anthropic"
     supportsDisablingReasoning?: boolean
 }
 
@@ -42,7 +50,7 @@ export const MODELS_SHARED: SharedModel[] = [
         id: "gpt-5",
         name: "GPT 5",
         shortName: "GPT 5",
-        adapters: ["i3-openai:gpt-5", "openrouter:openai/gpt-5"],
+        adapters: ["openai:gpt-5", "openrouter:openai/gpt-5"],
         abilities: ["vision", "function_calling", "pdf"]
     },
     {
@@ -56,31 +64,27 @@ export const MODELS_SHARED: SharedModel[] = [
         id: "gpt-4o-mini",
         name: "GPT 4o mini",
         shortName: "4o mini",
-        adapters: ["i3-openai:gpt-4o-mini", "openai:gpt-4o-mini", "openrouter:openai/gpt-4o-mini"],
+        adapters: ["openai:gpt-4o-mini", "openai:gpt-4o-mini", "openrouter:openai/gpt-4o-mini"],
         abilities: ["vision", "function_calling", "pdf"]
     },
-
     // {
     //     id: "o3-mini",
     //     name: "o3 mini",
     //     adapters: ["openai:o3-mini", "openrouter:openai/o3-mini"],
     //     abilities: ["reasoning", "function_calling", "effort_control"]
     // },
-
     {
         id: "o4-mini",
         name: "o4 mini",
         adapters: ["openai:o4-mini", "openrouter:openai/o4-mini"],
         abilities: ["reasoning", "vision", "function_calling", "pdf", "effort_control"]
     },
-
     // {
     //     id: "o3",
     //     name: "o3",
     //     adapters: ["openai:o3", "openrouter:openai/o3"],
     //     abilities: ["reasoning", "vision", "function_calling", "pdf", "effort_control"]
     // },
-
     {
         id: "o3-pro",
         name: "o3 pro",
@@ -93,7 +97,6 @@ export const MODELS_SHARED: SharedModel[] = [
         adapters: ["openai:gpt-4.1", "openrouter:openai/gpt-4.1"],
         abilities: ["vision", "function_calling", "pdf"]
     },
-
     // {
     //     id: "gpt-4.1-mini",
     //     name: "GPT 4.1 mini",
@@ -105,7 +108,6 @@ export const MODELS_SHARED: SharedModel[] = [
     //     ],
     //     abilities: ["vision", "function_calling", "pdf"]
     // },
-
     // {
     //     id: "gpt-4.1-nano",
     //     name: "GPT 4.1 nano",
@@ -116,8 +118,7 @@ export const MODELS_SHARED: SharedModel[] = [
     //         "openrouter:openai/gpt-4.1-nano"
     //     ],
     //     abilities: ["vision", "function_calling", "pdf"]
-    // },
-
+    // }
     // {
     //     id: "claude-3-5-sonnet",
     //     name: "Claude Sonnet 3.5",
@@ -131,25 +132,27 @@ export const MODELS_SHARED: SharedModel[] = [
         shortName: "Sonnet 4",
         adapters: ["anthropic:claude-sonnet-4-0", "openrouter:anthropic/claude-sonnet-4"],
         abilities: ["reasoning", "vision", "function_calling", "pdf", "effort_control"],
-        supportsDisablingReasoning: true
+        supportsDisablingReasoning: true,
+        customIcon: "anthropic"
     },
     {
         id: "claude-sonnet-4.5",
         name: "Claude Sonnet 4.5",
         shortName: "Sonnet 4.5",
         adapters: ["anthropic:claude-sonnet-4-5", "openrouter:anthropic/claude-sonnet-4.5"],
-        abilities: ["reasoning", "vision", "function_calling", "pdf"],
-        supportsDisablingReasoning: true
+        abilities: ["reasoning", "vision", "function_calling", "pdf", "effort_control"],
+        supportsDisablingReasoning: true,
+        customIcon: "anthropic"
     },
     {
         id: "claude-opus-4.1",
         name: "Claude Opus 4.1",
         shortName: "Opus 4.1",
         adapters: ["anthropic:claude-opus-4-1", "openrouter:anthropic/claude-opus-4.1"],
-        abilities: ["reasoning", "vision", "function_calling", "pdf"],
-        supportsDisablingReasoning: true
+        abilities: ["reasoning", "vision", "function_calling", "pdf", "effort_control"],
+        supportsDisablingReasoning: true,
+        customIcon: "anthropic"
     },
-
     // {
     //     id: "claude-3-7-sonnet",
     //     name: "Claude Sonnet 3.7",
@@ -158,7 +161,6 @@ export const MODELS_SHARED: SharedModel[] = [
     //     abilities: ["reasoning", "vision", "function_calling", "pdf", "effort_control"],
     //     supportsDisablingReasoning: true
     // },
-
     // {
     //     id: "gemini-2.0-flash-lite",
     //     name: "Gemini 2.0 Flash Lite",
@@ -170,7 +172,6 @@ export const MODELS_SHARED: SharedModel[] = [
     //     ],
     //     abilities: ["vision", "function_calling", "pdf"]
     // },
-
     {
         id: "gemini-2.0-flash-image-generation",
         name: "Gemini 2.0 Flash Imagen",
@@ -202,7 +203,6 @@ export const MODELS_SHARED: SharedModel[] = [
         abilities: ["vision", "function_calling", "reasoning", "pdf", "effort_control"],
         supportsDisablingReasoning: true
     },
-
     // {
     //     id: "gemini-2.0-flash",
     //     name: "Gemini 2.0 Flash",
@@ -222,16 +222,39 @@ export const MODELS_SHARED: SharedModel[] = [
         abilities: ["reasoning", "vision", "function_calling", "pdf", "effort_control"],
         supportsDisablingReasoning: true
     },
-
     {
         id: "deepseek-v3.2-exp",
         name: "Deepseek v3.2 Exp",
         shortName: "Deepseek v3.2",
         adapters: ["openrouter:deepseek/deepseek-v3.2-exp"],
-        abilities: ["reasoning", "function_calling", "pdf"],
+        abilities: ["reasoning", "function_calling", "pdf", "effort_control"],
         customIcon: "deepseek"
     },
-
+    {
+        id: "deepseek-v3.1-terminus",
+        name: "Deepseek v3.1 Terminus",
+        shortName: "Deepseek v3.1",
+        adapters: ["openrouter:deepseek/deepseek-v3.1-terminus"],
+        abilities: ["reasoning", "function_calling", "pdf", "effort_control"],
+        customIcon: "deepseek"
+    },
+    {
+        id: "grok-4-fast",
+        name: "Grok 4 Fast",
+        shortName: "Grok 4 Fast",
+        adapters: ["openrouter:x-ai/grok-4-fast"],
+        abilities: ["reasoning", "function_calling", "pdf"],
+        supportsDisablingReasoning: true,
+        customIcon: "xai"
+    },
+    {
+        id: "grok-code-fast-1",
+        name: "Grok Code Fast",
+        shortName: "Grok Code Fast",
+        adapters: ["openrouter:x-ai/grok-code-fast-1"],
+        abilities: ["function_calling", "pdf"],
+        customIcon: "xai"
+    },
     // Image Generation Models
     {
         id: "gpt-image-1",
@@ -245,7 +268,7 @@ export const MODELS_SHARED: SharedModel[] = [
         id: "sdxl-lightning",
         name: "SDXL Lightning",
         shortName: "SDXL",
-        adapters: ["i3-fal:fal-ai/fast-lightning-sdxl", "fal:fal-ai/fast-lightning-sdxl"],
+        adapters: ["fal:fal-ai/fast-lightning-sdxl", "fal:fal-ai/fast-lightning-sdxl"],
         abilities: [],
         mode: "image",
         customIcon: "stability-ai",
@@ -255,7 +278,7 @@ export const MODELS_SHARED: SharedModel[] = [
         id: "flux-schnell",
         name: "FLUX.1 [schnell]",
         shortName: "flux.schnell",
-        adapters: ["i3-fal:fal-ai/flux/schnell", "fal:fal-ai/flux/schnell"],
+        adapters: ["fal:fal-ai/flux/schnell", "fal:fal-ai/flux/schnell"],
         abilities: [],
         mode: "image",
         customIcon: "bflabs",
@@ -301,7 +324,6 @@ export const MODELS_SHARED: SharedModel[] = [
         customIcon: "google",
         supportedImageSizes: ["1:1-hd", "16:9-hd", "9:16-hd", "3:4-hd", "4:3-hd"]
     },
-
     // {
     //     id: "llama-4-scout-17b-16e-instruct",
     //     name: "Llama 4 Scout 17B 16E",
@@ -313,7 +335,6 @@ export const MODELS_SHARED: SharedModel[] = [
     //     abilities: ["vision"],
     //     customIcon: "meta"
     // },
-
     // {
     //     id: "llama-4-maverick-17b-128e-instruct",
     //     name: "Llama 4 Maverick 17B 128E Instruct",
@@ -322,7 +343,6 @@ export const MODELS_SHARED: SharedModel[] = [
     //     abilities: ["vision"],
     //     customIcon: "meta"
     // },
-
     // {
     //     id: "llama-3-1-8b-instant",
     //     name: "Llama 3.1 8B Instant",

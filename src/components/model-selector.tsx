@@ -3,7 +3,8 @@ import {
     DeepSeekIcon,
     GeminiIcon,
     MetaIcon,
-    OpenAIIcon
+    OpenAIIcon,
+    XAIIcon
 } from "@/components/brand-icons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -65,6 +66,8 @@ export const getProviderIcon = (model: DisplayModel, isCustom: boolean) => {
                 return <MetaIcon className="size-4" />
             case "deepseek":
                 return <DeepSeekIcon className="size-4" />
+            case "xai":
+                return <XAIIcon className="size-4" />
             default:
                 return <Badge className="text-xs">Built-in</Badge>
         }
