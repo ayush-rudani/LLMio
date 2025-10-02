@@ -8,7 +8,7 @@ import { auth } from "@/lib/auth"
 import globals_css from "@/styles/globals.css?url"
 import { createServerFn } from "@tanstack/react-start"
 import { getHeaders } from "@tanstack/react-start/server"
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 import { Providers } from "../providers"
 
 // Configurable site metadata
