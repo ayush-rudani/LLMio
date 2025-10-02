@@ -161,17 +161,17 @@ export const MODELS_SHARED: SharedModel[] = [
     //     abilities: ["reasoning", "vision", "function_calling", "pdf", "effort_control"],
     //     supportsDisablingReasoning: true
     // },
-    // {
-    //     id: "gemini-2.0-flash-lite",
-    //     name: "Gemini 2.0 Flash Lite",
-    //     shortName: "2.0 Flash Lite",
-    //     adapters: [
-    //         "i3-google:gemini-2.0-flash-lite",
-    //         "google:gemini-2.0-flash-lite",
-    //         "openrouter:google/gemini-2.0-flash-lite-001"
-    //     ],
-    //     abilities: ["vision", "function_calling", "pdf"]
-    // },
+    {
+        id: "gemini-2.0-flash-lite",
+        name: "Gemini 2.0 Flash Lite",
+        shortName: "2.0 Flash Lite",
+        adapters: [
+            "i3-google:gemini-2.0-flash-lite",
+            "google:gemini-2.0-flash-lite",
+            "openrouter:google/gemini-2.0-flash-lite-001"
+        ],
+        abilities: ["vision", "function_calling", "pdf"]
+    },
     {
         id: "gemini-2.0-flash-image-generation",
         name: "Gemini 2.0 Flash Imagen",
