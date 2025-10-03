@@ -48,9 +48,8 @@ export const buildPrompt = (
 
         ## Mathematical Expressions
         - Use LaTeX for all mathematical notation.
-        - For **inline math**, enclose the expression in single dollar signs. Example: \`The equation is \$E = mc^2\$.\`
-        - For **block math**, enclose the expression in double dollar signs. Example:
-        $$\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}$$
+        - For **inline math**, enclose the expression in double dollar signs. Example: \`The equation is \$\$E = mc^2\$\$.\`
+        - For **block math**, use \\[ \\] or \\( \\) for block LaTeX equations.
         - Do not use Unicode characters for math symbols; always use LaTeX.
 
         ## Code and Visualizations
