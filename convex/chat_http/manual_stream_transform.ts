@@ -76,7 +76,10 @@ export const manualStreamTransform = (
                 }
 
                 case "reasoning": {
-                    controller.enqueue(formatDataStreamPart("reasoning", chunk.textDelta))
+                    // Wrap in object to prevent AI SDK from processing as plain text
+                    controller.enqueue(formatDataStreamPart("reasoning", {
+                        textDelta: chunk.textDelta
+                    }))
                     appendTextPart(chunk.textDelta, "reasoning")
                     break
                 }
