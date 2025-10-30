@@ -89,7 +89,7 @@ const FileAttachment = memo(
                 <img
                     src={`${browserEnv("VITE_CONVEX_API_URL")}/r2?key=${part.data}`}
                     alt={fileName}
-                    className="w-full max-w-3xl cursor-pointer rounded-lg object-contain transition-opacity hover:opacity-90"
+                    className="w-full max-w-2xl cursor-pointer rounded-lg object-contain transition-opacity hover:opacity-90"
                     onClick={handleInteraction}
                     onKeyDown={handleKeyDown}
                     onError={handleImageError}
@@ -360,7 +360,7 @@ export function Messages({
                                 "mb-8",
                                 message.role === "user" &&
                                     targetFromMessageId !== message.id &&
-                                    "my-12 ml-auto w-fit max-w-3xl rounded-md border border-border bg-secondary/50 px-4 py-2 text-foreground"
+                                    "my-12 ml-auto w-fit max-w-2xl rounded-md border border-border bg-secondary/50 px-4 py-2 text-foreground"
                             )}
                         >
                             {targetFromMessageId === message.id && targetMode === "edit" ? (
