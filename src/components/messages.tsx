@@ -210,12 +210,12 @@ const EditableMessage = memo(
         }
 
         return (
-            <div className="rounded-2xl bg-primary">
+            <div className="mt-12 flex flex-col gap-3 rounded-lg border border-input bg-background/80 p-3 shadow-xs backdrop-blur-lg dark:bg-input/70">
                 <Textarea
                     value={editedContent}
                     onChange={(e) => setEditedContent(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    className=" my-12 w-full resize-none border-none bg-transparent p-4 pb-2 text-primary-foreground shadow-none outline-none placeholder:text-muted-foreground focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                    className="min-h-[160px] w-full resize-none border-none bg-transparent text-foreground shadow-none outline-none placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
                     autoFocus
                 />
                 <div className="flex justify-end gap-2 px-4 pb-3">
@@ -223,7 +223,7 @@ const EditableMessage = memo(
                         variant="ghost"
                         size="sm"
                         onClick={onCancel}
-                        className="rounded-md text-primary-foreground hover:border-none hover:bg-transparent hover:text-primary-foreground/80"
+                        className="rounded-md text-muted-foreground hover:text-foreground"
                     >
                         Cancel
                     </Button>

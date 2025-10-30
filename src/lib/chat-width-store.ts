@@ -33,10 +33,10 @@ export const useChatWidthStore = create<ChatWidthStore>()(
 export const getChatWidthClass = (chatWidth: ChatWidth) => {
     switch (chatWidth) {
         case "normal":
-            return "max-w-2xl"
+            return "max-w-3xl"
         case "wider":
             return "max-w-4xl"
         default:
-            return "max-w-2xl"
+            return "max-w-3xl"
     }
 }
