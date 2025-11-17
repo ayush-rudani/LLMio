@@ -66,7 +66,8 @@ export const ThreadItem = memo(
                     className={cn(
                         "group/item flex w-full items-center rounded-sm hover:bg-accent/50",
                         isMenuOpen && "bg-accent/50",
-                        isActive && "bg-accent/60"
+                        isActive && "bg-accent/60",
+                        "h-9"
                     )}
                 >
                     <SidebarMenuButton
@@ -76,20 +77,22 @@ export const ThreadItem = memo(
                         <Link
                             to="/thread/$threadId"
                             params={{ threadId: thread._id }}
-                            className="flex items-center justify-between"
+                            className="group/link relative flex items-center"
                         >
-                            <span className="truncate">{thread.title}</span>
+                            <span className="flex-1 truncate pr-12">{thread.title}</span>
 
                             <DropdownMenu onOpenChange={setIsMenuOpen}>
                                 <DropdownMenuTrigger asChild>
                                     <button
                                         type="button"
                                         className={cn(
-                                            "rounded p-1 transition-opacity",
-                                            isMenuOpen || "opacity-0 group-hover/item:opacity-100"
+                                            "absolute right-1 flex h-7 w-7 items-center justify-center rounded",
+                                            "bg-background/80 shadow-sm backdrop-blur-sm transition-opacity",
+                                            "opacity-0 group-hover/item:opacity-100 group-hover/link:opacity-100",
+                                            "focus-visible:opacity-100"
                                         )}
                                     >
-                                        <MoreHorizontal className="mr-1 h-4 w-4" />
+                                        <MoreHorizontal className="h-4 w-4" />
                                     </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
