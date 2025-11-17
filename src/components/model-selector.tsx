@@ -3,6 +3,7 @@ import {
     DeepSeekIcon,
     GeminiIcon,
     MetaIcon,
+    Moonshot,
     OpenAIIcon,
     XAIIcon
 } from "@/components/brand-icons"
@@ -68,6 +69,8 @@ export const getProviderIcon = (model: DisplayModel, isCustom: boolean) => {
                 return <DeepSeekIcon className="size-4" />
             case "xai":
                 return <XAIIcon className="size-4" />
+            case "moonshot":
+                return <Moonshot className="size-4" />
             default:
                 return <Badge className="text-xs">Built-in</Badge>
         }

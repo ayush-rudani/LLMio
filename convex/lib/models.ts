@@ -42,16 +42,38 @@ export type SharedModel<Abilities extends ModelAbility[] = ModelAbility[]> = {
         | "deepseek"
         | "xai"
         | "anthropic"
+        | "moonshot"
     supportsDisablingReasoning?: boolean
 }
 
 export const MODELS_SHARED: SharedModel[] = [
     {
+        id: "gpt-5.1",
+        name: "GPT 5.1",
+        shortName: "GPT 5.1",
+        adapters: ["openai:gpt-5.1", "openrouter:openai/gpt-5.1"],
+        abilities: ["reasoning", "vision", "function_calling", "pdf", "effort_control"]
+    },
+    {
         id: "gpt-5",
         name: "GPT 5",
         shortName: "GPT 5",
         adapters: ["openai:gpt-5", "openrouter:openai/gpt-5"],
-        abilities: ["vision", "function_calling", "pdf", "effort_control"]
+        abilities: ["reasoning", "vision", "function_calling", "pdf", "effort_control"]
+    },
+    {
+        id: "gpt-5-mini",
+        name: "GPT 5 mini",
+        shortName: "GPT 5 mini",
+        adapters: ["openai:gpt-5-mini", "openrouter:openai/gpt-5-mini"],
+        abilities: ["reasoning", "vision", "function_calling", "effort_control"]
+    },
+    {
+        id: "gpt-5-nano",
+        name: "GPT 5 nano",
+        shortName: "GPT 5 nano",
+        adapters: ["openai:gpt-5-nano", "openrouter:openai/gpt-5-nano"],
+        abilities: ["reasoning", "vision", "function_calling", "effort_control"]
     },
     {
         id: "gpt-4o",
@@ -231,6 +253,14 @@ export const MODELS_SHARED: SharedModel[] = [
         customIcon: "deepseek"
     },
     {
+        id: "kimi-k2-thinking",
+        name: "Kimi K2",
+        shortName: "Kimi K2",
+        adapters: ["openrouter:moonshotai/kimi-k2-thinking"],
+        abilities: ["reasoning", "function_calling", "pdf", "effort_control"],
+        customIcon: "moonshot"
+    },
+    {
         id: "deepseek-v3.1-terminus",
         name: "Deepseek v3.1 Terminus",
         shortName: "Deepseek v3.1",
@@ -239,22 +269,23 @@ export const MODELS_SHARED: SharedModel[] = [
         customIcon: "deepseek"
     },
     {
+        id: "grok-4",
+        name: "Grok 4",
+        shortName: "Grok 4",
+        adapters: ["openrouter:x-ai/grok-4"],
+        abilities: ["reasoning", "vision", "function_calling", "pdf", "effort_control"],
+        customIcon: "xai"
+    },
+    {
         id: "grok-4-fast",
         name: "Grok 4 Fast",
         shortName: "Grok 4 Fast",
         adapters: ["openrouter:x-ai/grok-4-fast"],
-        abilities: ["reasoning", "function_calling", "pdf"],
+        abilities: ["reasoning", "vision", "function_calling", "pdf"],
         supportsDisablingReasoning: true,
         customIcon: "xai"
     },
-    {
-        id: "grok-code-fast-1",
-        name: "Grok Code Fast",
-        shortName: "Grok Code Fast",
-        adapters: ["openrouter:x-ai/grok-code-fast-1"],
-        abilities: ["function_calling", "pdf"],
-        customIcon: "xai"
-    },
+
     // Image Generation Models
     {
         id: "gpt-image-1",
