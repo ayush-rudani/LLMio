@@ -88,7 +88,9 @@ export const ThreadItem = memo(
                                         className={cn(
                                             "absolute right-1 flex h-7 w-7 items-center justify-center rounded",
                                             "bg-background/80 shadow-sm backdrop-blur-sm transition-opacity",
-                                            "opacity-0 group-hover/item:opacity-100 group-hover/link:opacity-100",
+                                            isMenuOpen
+                                                ? "opacity-100"
+                                                : "opacity-0 group-hover/item:opacity-100 group-hover/link:opacity-100",
                                             "focus-visible:opacity-100"
                                         )}
                                     >
