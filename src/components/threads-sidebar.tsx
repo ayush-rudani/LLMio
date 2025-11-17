@@ -41,6 +41,7 @@ function groupThreadsByTime(threads: Thread[]) {
     const yesterdayThreads: Thread[] = []
     const lastSevenDays: Thread[] = []
     const lastThirtyDays: Thread[] = []
+    const older: Thread[] = []
 
     threads.forEach((thread) => {
         const threadDate = new Date(thread.createdAt)
@@ -57,6 +58,8 @@ function groupThreadsByTime(threads: Thread[]) {
             lastSevenDays.push(thread)
         } else if (isAfter(threadDate, lastMonth)) {
             lastThirtyDays.push(thread)
+        } else {
+            older.push(thread)
         }
     })
 
@@ -65,7 +68,8 @@ function groupThreadsByTime(threads: Thread[]) {
         today,
         yesterday: yesterdayThreads,
         lastSevenDays,
-        lastThirtyDays
+        lastThirtyDays,
+        older
     }
 }
 
@@ -364,6 +368,13 @@ export function ThreadsSidebar() {
                         <ThreadsGroup
                             title="Last 30 Days"
                             threads={groupedNonProjectThreads.lastThirtyDays}
+                            onOpenRenameDialog={handleOpenRenameDialog}
+                            onOpenMoveDialog={handleOpenMoveDialog}
+                            onOpenDeleteDialog={handleOpenDeleteDialog}
+                        />
+                        <ThreadsGroup
+                            title="Older"
+                            threads={groupedNonProjectThreads.older}
                             onOpenRenameDialog={handleOpenRenameDialog}
                             onOpenMoveDialog={handleOpenMoveDialog}
                             onOpenDeleteDialog={handleOpenDeleteDialog}
