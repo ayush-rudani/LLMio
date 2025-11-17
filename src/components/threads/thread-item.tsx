@@ -79,7 +79,7 @@ export const ThreadItem = memo(
                             params={{ threadId: thread._id }}
                             className="group/link relative flex items-center"
                         >
-                            <span className="flex-1 truncate pr-12">{thread.title}</span>
+                            <span className="truncate">{thread.title}</span>
 
                             <DropdownMenu onOpenChange={setIsMenuOpen}>
                                 <DropdownMenuTrigger asChild>
