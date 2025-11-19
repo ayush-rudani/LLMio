@@ -87,11 +87,11 @@ export const ThreadItem = memo(
                                         type="button"
                                         className={cn(
                                             "absolute right-1 flex h-7 w-7 items-center justify-center rounded",
-                                            "bg-background/80 shadow-sm backdrop-blur-sm transition-opacity",
+                                            "bg-background/80 shadow-sm backdrop-blur-sm transition-all duration-200 ease-in-out",
                                             isMenuOpen
-                                                ? "opacity-100"
-                                                : "opacity-0 group-hover/item:opacity-100 group-hover/link:opacity-100",
-                                            "focus-visible:opacity-100"
+                                                ? "translate-x-0 opacity-100"
+                                                : "translate-x-2 opacity-0 group-hover/item:translate-x-0 group-hover/link:translate-x-0 group-hover/item:opacity-100 group-hover/link:opacity-100",
+                                            "focus-visible:translate-x-0 focus-visible:opacity-100"
                                         )}
                                     >
                                         <MoreHorizontal className="h-4 w-4" />
