@@ -48,12 +48,15 @@ export const SupermemoryAdapter: ToolAdapter = async ({ ctx, enabledTools, userS
                         apiKey
                     })
 
+                    // Sanitize function to ensure tags only contain alphanumeric, hyphens, and underscores
+                    const sanitizeTag = (tag: string) => tag.replace(/[^a-zA-Z0-9\-_]/g, '_')
+                    
                     const containerTags = [userSettings.userId]
                     if (metadata?.category) {
-                        containerTags.push(`category:${metadata.category}`)
+                        containerTags.push(`category_${sanitizeTag(metadata.category)}`)
                     }
                     if (metadata?.tags) {
-                        containerTags.push(...metadata.tags.map((tag) => `tag:${tag}`))
+                        containerTags.push(...metadata.tags.map((tag) => `tag_${sanitizeTag(tag)}`))
                     }
 
                     const response = await client.memories.add({
@@ -92,14 +95,8 @@ export const SupermemoryAdapter: ToolAdapter = async ({ ctx, enabledTools, userS
                     .max(10)
                     .default(5)
                     .describe("Maximum number of memories to return. Default is 5."),
-                category: z.union([
-                    z.string().describe("Filter by specific category. Optional."),
-                    z.null()
-                ]),
-                tags: z.union([
-                    z.array(z.string()).describe("Filter by specific tags. Optional."),
-                    z.null()
-                ])
+                category: z.string().describe("Filter by specific category. Optional.").optional(),
+                tags: z.array(z.string()).describe("Filter by specific tags. Optional.").optional()
             }),
             execute: async ({ query, limit = 5, category, tags }) => {
                 try {
@@ -118,12 +115,15 @@ export const SupermemoryAdapter: ToolAdapter = async ({ ctx, enabledTools, userS
                         apiKey
                     })
 
+                    // Sanitize function to ensure tags only contain alphanumeric, hyphens, and underscores
+                    const sanitizeTag = (tag: string) => tag.replace(/[^a-zA-Z0-9\-_]/g, '_')
+                    
                     const containerTags = [userSettings.userId]
                     if (category) {
-                        containerTags.push(`category:${category}`)
+                        containerTags.push(`category_${sanitizeTag(category)}`)
                     }
                     if (tags) {
-                        containerTags.push(...tags.map((tag) => `tag:${tag}`))
+                        containerTags.push(...tags.map((tag) => `tag_${sanitizeTag(tag)}`))
                     }
 
                     const response = await client.search.execute({
