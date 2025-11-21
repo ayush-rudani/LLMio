@@ -4,6 +4,9 @@ import { z } from "zod"
 import { internal } from "../../_generated/api"
 import type { ToolAdapter } from "../toolkit"
 
+// Sanitize function to ensure tags only contain alphanumeric, hyphens, and underscores
+const sanitizeTag = (tag: string) => tag.replace(/[^a-zA-Z0-9\-_]/g, '_')
+
 export const SupermemoryAdapter: ToolAdapter = async ({ ctx, enabledTools, userSettings }) => {
     if (!enabledTools.includes("supermemory")) return {}
 
@@ -48,9 +51,6 @@ export const SupermemoryAdapter: ToolAdapter = async ({ ctx, enabledTools, userS
                         apiKey
                     })
 
-                    // Sanitize function to ensure tags only contain alphanumeric, hyphens, and underscores
-                    const sanitizeTag = (tag: string) => tag.replace(/[^a-zA-Z0-9\-_]/g, '_')
-                    
                     const containerTags = [userSettings.userId]
                     if (metadata?.category) {
                         containerTags.push(`category_${sanitizeTag(metadata.category)}`)
@@ -115,9 +115,6 @@ export const SupermemoryAdapter: ToolAdapter = async ({ ctx, enabledTools, userS
                         apiKey
                     })
 
-                    // Sanitize function to ensure tags only contain alphanumeric, hyphens, and underscores
-                    const sanitizeTag = (tag: string) => tag.replace(/[^a-zA-Z0-9\-_]/g, '_')
-                    
                     const containerTags = [userSettings.userId]
                     if (category) {
                         containerTags.push(`category_${sanitizeTag(category)}`)
