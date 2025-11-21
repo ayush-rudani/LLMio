@@ -4,8 +4,15 @@ import { z } from "zod"
 import { internal } from "../../_generated/api"
 import type { ToolAdapter } from "../toolkit"
 
-// Sanitize function to ensure tags only contain alphanumeric, hyphens, and underscores
-const sanitizeTag = (tag: string) => tag.replace(/[^a-zA-Z0-9\-_]/g, '_')
+/**
+ * Sanitizes a tag string to ensure it only contains alphanumeric characters, hyphens, and underscores.
+ * All other characters (including spaces and special characters) are replaced with underscores.
+ * This ensures compatibility with Supermemory API's validation requirements.
+ * 
+ * @param tag - The tag string to sanitize
+ * @returns The sanitized tag string with only alphanumeric characters, hyphens, and underscores
+ */
+const sanitizeTag = (tag: string) => tag.replace(/[^a-zA-Z0-9_-]/g, '_')
 
 export const SupermemoryAdapter: ToolAdapter = async ({ ctx, enabledTools, userSettings }) => {
     if (!enabledTools.includes("supermemory")) return {}
