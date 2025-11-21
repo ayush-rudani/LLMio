@@ -69,6 +69,8 @@ export const SupermemoryAdapter: ToolAdapter = async ({ ctx, enabledTools, userS
                     const response = await client.memories.add({
                         content,
                         containerTags,
+                        // Note: metadata stores original values for human readability,
+                        // while containerTags uses sanitized values for API compatibility
                         metadata: {
                             ...(metadata?.title && { title: metadata.title }),
                             ...(metadata?.category && { category: metadata.category }),
