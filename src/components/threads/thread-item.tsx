@@ -81,41 +81,71 @@ export const ThreadItem = memo(
                         >
                             <span className="truncate">{thread.title}</span>
 
-                            <DropdownMenu onOpenChange={setIsMenuOpen}>
-                                <DropdownMenuTrigger asChild>
-                                    <button
-                                        type="button"
-                                        className={cn(
-                                            "absolute right-1 flex h-7 w-7 items-center justify-center rounded",
-                                            "bg-background/80 shadow-sm backdrop-blur-sm transition-opacity",
-                                            isMenuOpen
-                                                ? "opacity-100"
-                                                : "opacity-0 group-hover/item:opacity-100 group-hover/link:opacity-100",
-                                            "focus-visible:opacity-100"
-                                        )}
-                                    >
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={handleRename}>
-                                        <Edit3 className="h-4 w-4" />
-                                        Rename
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleTogglePin}>
-                                        <Pin className="h-4 w-4" />
-                                        {thread.pinned ? "Unpin" : "Pin"}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleMove}>
-                                        <FolderOpen className="h-4 w-4" />
-                                        Move to folder
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleDelete} variant="destructive">
-                                        <Trash2 className="h-4 w-4" />
-                                        Delete
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                            <div
+                                className={cn(
+                                    "absolute right-1 flex items-center gap-1",
+                                    isMenuOpen
+                                        ? "translate-x-0 opacity-100"
+                                        : "translate-x-2 opacity-0 group-hover/item:translate-x-0 group-hover/link:translate-x-0 group-hover/item:opacity-100 group-hover/link:opacity-100",
+                                    "transition-all duration-100 ease-in-out"
+                                )}
+                            >
+                                <button
+                                    type="button"
+                                    aria-label={`Delete ${thread.title}`}
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        handleDelete()
+                                    }}
+                                    className={cn(
+                                        "flex h-7 w-7 items-center justify-center rounded",
+                                        "bg-background/80 shadow-sm backdrop-blur-sm transition-colors",
+                                        "hover:bg-background hover:text-destructive",
+                                        "focus-visible:ring-1"
+                                    )}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </button>
+
+                                <DropdownMenu onOpenChange={setIsMenuOpen}>
+                                    <DropdownMenuTrigger asChild>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => e.preventDefault()}
+                                            className={cn(
+                                                "flex h-7 w-7 items-center justify-center rounded",
+                                                "bg-background/80 shadow-sm backdrop-blur-sm transition-colors",
+                                                "hover:bg-background",
+                                                "focus-visible:ring-1"
+                                            )}
+                                        >
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={handleRename}>
+                                            <Edit3 className="h-4 w-4" />
+                                            Rename
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={handleTogglePin}>
+                                            <Pin className="h-4 w-4" />
+                                            {thread.pinned ? "Unpin" : "Pin"}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={handleMove}>
+                                            <FolderOpen className="h-4 w-4" />
+                                            Move to folder
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={handleDelete}
+                                            variant="destructive"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            Delete
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
                         </Link>
                     </SidebarMenuButton>
                 </div>
