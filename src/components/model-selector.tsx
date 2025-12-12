@@ -229,6 +229,21 @@ export function ModelSelector({
 
     const isMobile = useIsMobile()
 
+    // Auto-select first available model if the current selection is not available
+    React.useEffect(() => {
+        if (!selectedModelData && availableModels.length > 0) {
+            // Find a built-in model first (one with i3- prefix)
+            const builtInModel = availableModels.find((model) => {
+                const sharedModel = model as SharedModel
+                return sharedModel.adapters?.some((adapter) => adapter.startsWith("i3-"))
+            })
+
+            // Use built-in model if found, otherwise use first available
+            const modelToSelect = builtInModel || availableModels[0]
+            onModelChange(modelToSelect.id)
+        }
+    }, [selectedModelData, availableModels, onModelChange])
+
     // React.useEffect(() => {
     //     const down = (e: KeyboardEvent) => {
     //         if (e.key === "k" && (e.metaKey || e.ctrlKey)) {

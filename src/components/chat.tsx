@@ -40,7 +40,9 @@ const ChatContent = ({ threadId: routeThreadId, folderId }: ChatProps) => {
 
     useMemo(() => {
         if (!selectedModel && MODELS_SHARED.length > 0) {
-            setSelectedModel(MODELS_SHARED[0].id)
+            // Set gemini-2.5-flash as the default model for new users (built-in, no API key required)
+            const defaultModel = MODELS_SHARED.find((m) => m.id === "gemini-2.5-flash")
+            setSelectedModel(defaultModel ? defaultModel.id : MODELS_SHARED[0].id)
         }
     }, [selectedModel, setSelectedModel])
 

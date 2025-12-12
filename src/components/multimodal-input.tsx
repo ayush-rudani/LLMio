@@ -713,12 +713,10 @@ export function MultimodalInput({
                                     </div>
                                 </div>
                             )}
-                            {selectedModel && (
-                                <ModelSelector
-                                    selectedModel={selectedModel}
-                                    onModelChange={setSelectedModel}
-                                />
-                            )}
+                            <ModelSelector
+                                selectedModel={selectedModel || ""}
+                                onModelChange={setSelectedModel}
+                            />
 
                             {isImageModel ? (
                                 <AspectRatioSelector selectedModel={selectedModel} />

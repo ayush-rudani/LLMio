@@ -2,7 +2,7 @@ import { ABILITIES } from "@/convex/lib/toolkit"
 import { z } from "zod"
 
 const AIConfigSchema = z.object({
-    selectedModel: z.string().nullable(),
+    selectedModel: z.string().nullable().default("gemini-2.5-flash"),
     enabledTools: z
         .array(z.enum(ABILITIES as readonly ["web_search", "supermemory", "mcp"]))
         .default(["web_search"]),
@@ -25,7 +25,7 @@ const safeRemoveItem = (key: string): void => {
 export const loadAIConfig = (): AIConfig => {
     if (typeof window === "undefined")
         return {
-            selectedModel: null,
+            selectedModel: "gemini-2.5-flash", // Default built-in model for new users
             enabledTools: ["web_search"],
             selectedImageSize: "1:1",
             reasoningEffort: "medium"
@@ -33,7 +33,7 @@ export const loadAIConfig = (): AIConfig => {
     const stored = localStorage.getItem(AI_CONFIG_KEY)
     if (!stored) {
         return {
-            selectedModel: null,
+            selectedModel: "gemini-2.5-flash", // Default built-in model for new users
             enabledTools: ["web_search"],
             selectedImageSize: "1:1",
             reasoningEffort: "medium"
@@ -56,7 +56,7 @@ export const loadAIConfig = (): AIConfig => {
     } catch {
         safeRemoveItem(AI_CONFIG_KEY)
         return {
-            selectedModel: null,
+            selectedModel: "gemini-2.5-flash", // Default built-in model for new users
             enabledTools: ["web_search"],
             selectedImageSize: "1:1",
             reasoningEffort: "medium"
