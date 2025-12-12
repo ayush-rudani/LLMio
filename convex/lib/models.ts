@@ -48,6 +48,27 @@ export type SharedModel<Abilities extends ModelAbility[] = ModelAbility[]> = {
 
 export const MODELS_SHARED: SharedModel[] = [
     {
+        id: "gpt-5.2",
+        name: "GPT 5.2 (Instant)",
+        shortName: "GPT 5.2",
+        adapters: ["openai:gpt-5.2-chat-latest", "openrouter:openai/gpt-5.2-chat"],
+        abilities: ["vision", "function_calling"]
+    },
+    {
+        id: "gpt-5.2",
+        name: "GPT 5.2 (Reasoning)",
+        shortName: "GPT 5.2",
+        adapters: ["openai:gpt-5.2", "openrouter:openai/gpt-5.2"],
+        abilities: ["reasoning", "vision", "function_calling", "pdf", "effort_control"]
+    },
+    {
+        id: "gpt-5.2-pro",
+        name: "GPT 5.2 Pro",
+        shortName: "GPT 5.2 Pro",
+        adapters: ["openai:gpt-5.2-pro", "openrouter:openai/gpt-5.2-pro"],
+        abilities: ["reasoning", "vision", "function_calling", "pdf", "effort_control"]
+    },
+    {
         id: "gpt-5.1",
         name: "GPT 5.1",
         shortName: "GPT 5.1",
