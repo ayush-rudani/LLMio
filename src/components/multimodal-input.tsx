@@ -142,24 +142,6 @@ const ReasoningEffortSelector = ({ selectedModel }: { selectedModel: string | nu
         return effort.charAt(0).toUpperCase() + effort.slice(1)
     }
 
-    const getEffortIcon = (effort: ReasoningEffort) => {
-        switch (effort) {
-            case "low":
-                // @ts-expect-error - SVG component typing
-                return <BrainLow className="size-4" />
-            case "medium":
-                // @ts-expect-error - SVG component typing
-                return <BrainMid className="size-4" />
-            case "high":
-                // @ts-expect-error - SVG component typing
-                return <BrainHigh className="size-4" />
-            case "off":
-                return <Zap className="size-4" />
-            default:
-                return <Zap className="size-4" />
-        }
-    }
-
     return (
         <PromptInputAction tooltip="Select reasoning effort">
             <Select value={reasoningEffort} onValueChange={setReasoningEffort}>
