@@ -1,3 +1,6 @@
+import BrainHigh from "@/assets/brain-high.svg"
+import BrainLow from "@/assets/brain-low.svg"
+import BrainMid from "@/assets/brain-mid.svg"
 import { ModelSelector } from "@/components/model-selector"
 import {
     PromptInput,
@@ -43,7 +46,6 @@ import { useLocation } from "@tanstack/react-router"
 import { useConvexAuth } from "convex/react"
 import {
     ArrowUp,
-    Brain,
     Code,
     FileType,
     Image as ImageIcon,
@@ -145,7 +147,6 @@ const ReasoningEffortSelector = ({ selectedModel }: { selectedModel: string | nu
             <Select value={reasoningEffort} onValueChange={setReasoningEffort}>
                 <SelectTrigger className="!h-8 w-auto gap-0.5 border-0 bg-secondary/70 px-1.5 font-normal text-xs backdrop-blur-lg transition-colors hover:bg-accent sm:text-sm">
                     <div className="hidden items-center gap-1.5 sm:flex">
-                        <Brain className="size-4" />
                         <SelectValue />
                     </div>
                     <Zap className="size-4 sm:hidden" />
@@ -153,17 +154,32 @@ const ReasoningEffortSelector = ({ selectedModel }: { selectedModel: string | nu
                 <SelectContent>
                     {modelSupportsDisablingReasoning && (
                         <SelectItem value="off" className="text-xs sm:text-sm">
-                            {formatEffortForDisplay("off")}
+                            <div className="flex items-center gap-2">
+                                <Zap className="size-4" />
+                                {formatEffortForDisplay("off")}
+                            </div>
                         </SelectItem>
                     )}
                     <SelectItem value="low" className="text-xs sm:text-sm">
-                        {formatEffortForDisplay("low")}
+                        <div className="flex items-center gap-2">
+                            {/* @ts-expect-error - SVG component typing */}
+                            <BrainLow className="size-4" />
+                            {formatEffortForDisplay("low")}
+                        </div>
                     </SelectItem>
                     <SelectItem value="medium" className="text-xs sm:text-sm">
-                        {formatEffortForDisplay("medium")}
+                        <div className="flex items-center gap-2">
+                            {/* @ts-expect-error - SVG component typing */}
+                            <BrainMid className="size-4" />
+                            {formatEffortForDisplay("medium")}
+                        </div>
                     </SelectItem>
                     <SelectItem value="high" className="text-xs sm:text-sm">
-                        {formatEffortForDisplay("high")}
+                        <div className="flex items-center gap-2">
+                            {/* @ts-expect-error - SVG component typing */}
+                            <BrainHigh className="size-4" />
+                            {formatEffortForDisplay("high")}
+                        </div>
                     </SelectItem>
                 </SelectContent>
             </Select>
