@@ -48,7 +48,7 @@ export type SharedModel<Abilities extends ModelAbility[] = ModelAbility[]> = {
 
 export const MODELS_SHARED: SharedModel[] = [
     {
-        id: "gpt-5.2",
+        id: "gpt-5.2-chat",
         name: "GPT 5.2 (Instant)",
         shortName: "GPT 5.2",
         adapters: ["openai:gpt-5.2-chat-latest", "openrouter:openai/gpt-5.2-chat"],
