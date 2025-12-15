@@ -64,87 +64,103 @@ export const ThreadItem = memo(
             <SidebarMenuItem className={isInFolder ? "pl-6" : ""}>
                 <div
                     className={cn(
-                        "group/item flex w-full items-center rounded-sm hover:bg-accent/50",
-                        isMenuOpen && "bg-accent/50",
-                        isActive && "bg-accent/60",
-                        "h-9"
+                        "group/item flex w-full items-center rounded-md",
+                        "hover:bg-sidebar-accent",
+                        isMenuOpen && "bg-sidebar-accent",
+                        isActive && "bg-sidebar-accent text-foreground",
+                        "h-8.5"
                     )}
                 >
                     <SidebarMenuButton
                         asChild
-                        className={cn("flex-1 hover:bg-transparent", isActive && "text-foreground")}
+                        className={cn(
+                            "flex-1 hover:bg-transparent active:bg-transparent",
+                            isActive && "text-foreground"
+                        )}
                     >
                         <Link
                             to="/thread/$threadId"
                             params={{ threadId: thread._id }}
-                            className="group/link relative flex items-center"
+                            className="group/link relative flex w-full items-center overflow-hidden"
                         >
-                            <span className="truncate">{thread.title}</span>
+                            <span className="truncate pr-2">{thread.title}</span>
 
                             <div
                                 className={cn(
-                                    "absolute right-1 flex items-center gap-1",
+                                    "absolute top-0 right-0 bottom-0 z-10 flex items-center",
+                                    "transition-transform duration-100 ease-in-out",
                                     isMenuOpen
-                                        ? "translate-x-0 opacity-100"
-                                        : "translate-x-2 opacity-0 group-hover/item:translate-x-0 group-hover/link:translate-x-0 group-hover/item:opacity-100 group-hover/link:opacity-100",
-                                    "transition-all duration-100 ease-in-out"
+                                        ? "translate-x-0"
+                                        : "translate-x-full group-hover/item:translate-x-0"
                                 )}
                             >
-                                <button
-                                    type="button"
-                                    aria-label={`Delete ${thread.title}`}
-                                    onClick={(e) => {
-                                        e.preventDefault()
-                                        e.stopPropagation()
-                                        handleDelete()
-                                    }}
+                                <div
                                     className={cn(
-                                        "flex h-7 w-7 items-center justify-center rounded",
-                                        "bg-background/80 shadow-sm backdrop-blur-sm transition-colors",
-                                        "hover:bg-background hover:text-destructive",
-                                        "focus-visible:ring-1"
+                                        "pointer-events-none absolute top-0 right-full bottom-0 w-8",
+                                        "bg-linear-to-l from-sidebar-accent to-transparent",
+                                        isMenuOpen
+                                            ? "opacity-100"
+                                            : "opacity-0 group-hover/item:opacity-100"
                                     )}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </button>
+                                />
 
-                                <DropdownMenu onOpenChange={setIsMenuOpen}>
-                                    <DropdownMenuTrigger asChild>
-                                        <button
-                                            type="button"
-                                            onClick={(e) => e.preventDefault()}
-                                            className={cn(
-                                                "flex h-7 w-7 items-center justify-center rounded",
-                                                "bg-background/80 shadow-sm backdrop-blur-sm transition-colors",
-                                                "hover:bg-background",
-                                                "focus-visible:ring-1"
-                                            )}
-                                        >
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={handleRename}>
-                                            <Edit3 className="h-4 w-4" />
-                                            Rename
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={handleTogglePin}>
-                                            <Pin className="h-4 w-4" />
-                                            {thread.pinned ? "Unpin" : "Pin"}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={handleMove}>
-                                            <FolderOpen className="h-4 w-4" />
-                                            Move to folder
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onClick={handleDelete}
-                                            variant="destructive"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                            Delete
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                <div className="flex h-full items-center gap-0.5 bg-sidebar-accent pr-2 pl-1">
+                                    <button
+                                        type="button"
+                                        aria-label={`Delete ${thread.title}`}
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            handleDelete()
+                                        }}
+                                        className={cn(
+                                            "flex h-6 w-6 items-center justify-center rounded-md",
+                                            "text-muted-foreground hover:bg-sidebar-accent-foreground/10 hover:text-destructive",
+                                            "transition-colors"
+                                        )}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
+
+                                    <DropdownMenu onOpenChange={setIsMenuOpen}>
+                                        <DropdownMenuTrigger asChild>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => e.preventDefault()}
+                                                className={cn(
+                                                    "flex h-6 w-6 items-center justify-center rounded-md",
+                                                    "text-muted-foreground hover:bg-sidebar-accent-foreground/10 hover:text-foreground",
+                                                    "transition-colors",
+                                                    isMenuOpen &&
+                                                        "bg-sidebar-accent-foreground/10 text-foreground"
+                                                )}
+                                            >
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={handleRename}>
+                                                <Edit3 className="mr-2 h-4 w-4" />
+                                                Rename
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={handleTogglePin}>
+                                                <Pin className="mr-2 h-4 w-4" />
+                                                {thread.pinned ? "Unpin" : "Pin"}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={handleMove}>
+                                                <FolderOpen className="mr-2 h-4 w-4" />
+                                                Move to folder
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                onClick={handleDelete}
+                                                variant="destructive"
+                                            >
+                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                Delete
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
                             </div>
                         </Link>
                     </SidebarMenuButton>
