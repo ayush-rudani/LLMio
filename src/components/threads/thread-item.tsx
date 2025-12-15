@@ -64,10 +64,10 @@ export const ThreadItem = memo(
             <SidebarMenuItem className={isInFolder ? "pl-6" : ""}>
                 <div
                     className={cn(
-                        "group/item flex w-full items-center rounded-sm hover:bg-accent/50",
+                        "group/item flex w-full items-center rounded-md hover:bg-accent/50",
                         isMenuOpen && "bg-accent/50",
                         isActive && "bg-accent/60",
-                        "h-9"
+                        "h-8.5"
                     )}
                 >
                     <SidebarMenuButton
@@ -87,7 +87,7 @@ export const ThreadItem = memo(
                                     isMenuOpen
                                         ? "translate-x-0 opacity-100"
                                         : "translate-x-2 opacity-0 group-hover/item:translate-x-0 group-hover/link:translate-x-0 group-hover/item:opacity-100 group-hover/link:opacity-100",
-                                    "transition-all duration-100 ease-in-out"
+                                    "transition-all duration-80 ease-in-out"
                                 )}
                             >
                                 <button
