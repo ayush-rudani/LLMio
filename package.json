@@ -105,7 +105,6 @@
         "next-themes": "^0.4.6",
         "patch-package": "^8.0.0",
         "pg": "^8.16.3",
-        "posthog-js": "^1.254.0",
         "react": "^19.2.3",
         "react-day-picker": "^9.12.0",
         "react-dom": "^19.2.3",

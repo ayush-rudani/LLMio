@@ -6,7 +6,6 @@ import { AuthUIProviderTanstack } from "@daveyplate/better-auth-ui/tanstack"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ClientOnly, Link, useRouter } from "@tanstack/react-router"
 import { ConvexQueryCacheProvider } from "convex-helpers/react/cache"
-import { PostHogProvider } from "posthog-js/react"
 import type { ReactNode } from "react"
 import { Toaster } from "sonner"
 import { browserEnv } from "./lib/browser-env"
@@ -32,29 +31,20 @@ export function Providers({ children }: { children: ReactNode }) {
         <ClientOnly>
             <ConvexQueryCacheProvider>
                 <QueryClientProvider client={queryClient}>
-                    <PostHogProvider
-                        apiKey={browserEnv("VITE_POSTHOG_KEY")}
-                        options={{
-                            api_host: "/api/phr",
-                            capture_exceptions: true
-                            // debug: import.meta.env.MODE === "development"
-                        }}
-                    >
-                        <AuthQueryProvider>
-                            <ThemeProvider>
-                                <AuthUIProviderTanstack
-                                    authClient={authClient}
-                                    navigate={(href) => router.navigate({ href })}
-                                    replace={(href) => router.navigate({ href, replace: true })}
-                                    Link={({ href, ...props }) => <Link to={href} {...props} />}
-                                >
-                                    {children}
+                    <AuthQueryProvider>
+                        <ThemeProvider>
+                            <AuthUIProviderTanstack
+                                authClient={authClient}
+                                navigate={(href) => router.navigate({ href })}
+                                replace={(href) => router.navigate({ href, replace: true })}
+                                Link={({ href, ...props }) => <Link to={href} {...props} />}
+                            >
+                                {children}
 
-                                    <Toaster />
-                                </AuthUIProviderTanstack>
-                            </ThemeProvider>
-                        </AuthQueryProvider>
-                    </PostHogProvider>
+                                <Toaster />
+                            </AuthUIProviderTanstack>
+                        </ThemeProvider>
+                    </AuthQueryProvider>
                 </QueryClientProvider>
             </ConvexQueryCacheProvider>
         </ClientOnly>
