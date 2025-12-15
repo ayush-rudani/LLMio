@@ -12,7 +12,7 @@ import { useParams } from "@tanstack/react-router"
 import { useMutation } from "convex/react"
 import equal from "fast-deep-equal/es6"
 import { Edit3, FolderOpen, MoreHorizontal, Pin, Trash2 } from "lucide-react"
-import { memo, useState } from "react"
+import { memo, useCallback, useState } from "react"
 import { toast } from "sonner"
 import type { Thread } from "./types"
 
@@ -33,6 +33,18 @@ export const ThreadItem = memo(
         onOpenDeleteDialog
     }: ThreadItemProps) => {
         const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+        // Handle menu open change with a delay on close to prevent layout shift
+        const handleMenuOpenChange = useCallback((open: boolean) => {
+            if (open) {
+                setIsMenuOpen(true)
+            } else {
+                // Delay hiding to allow hover state to take over smoothly
+                requestAnimationFrame(() => {
+                    setIsMenuOpen(false)
+                })
+            }
+        }, [])
 
         const togglePinMutation = useMutation(api.threads.togglePinThread)
         const params = useParams({ strict: false }) as { threadId?: string }
@@ -122,7 +134,7 @@ export const ThreadItem = memo(
                                         <Trash2 className="h-4 w-4" />
                                     </button>
 
-                                    <DropdownMenu onOpenChange={setIsMenuOpen}>
+                                    <DropdownMenu onOpenChange={handleMenuOpenChange} modal={false}>
                                         <DropdownMenuTrigger asChild>
                                             <button
                                                 type="button"
