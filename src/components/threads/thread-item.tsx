@@ -68,7 +68,7 @@ export const ThreadItem = memo(
                         "hover:bg-sidebar-accent",
                         isMenuOpen && "bg-sidebar-accent",
                         isActive && "bg-sidebar-accent text-foreground",
-                        "h-8.5"
+                        "h-9"
                     )}
                 >
                     <SidebarMenuButton
@@ -88,7 +88,7 @@ export const ThreadItem = memo(
                             <div
                                 className={cn(
                                     "absolute top-0 right-0 bottom-0 z-10 flex items-center",
-                                    "transition-transform duration-100 ease-in-out",
+                                    "transition-transform duration-120 ease-in-out",
                                     isMenuOpen
                                         ? "translate-x-0"
                                         : "translate-x-full group-hover/item:translate-x-0"
@@ -115,7 +115,7 @@ export const ThreadItem = memo(
                                         }}
                                         className={cn(
                                             "flex h-6 w-6 items-center justify-center rounded-md",
-                                            "text-muted-foreground hover:bg-sidebar-accent-foreground/10 hover:text-destructive",
+                                            "text-foreground hover:bg-sidebar-accent-foreground/10 hover:text-destructive",
                                             "transition-colors"
                                         )}
                                     >
@@ -129,7 +129,7 @@ export const ThreadItem = memo(
                                                 onClick={(e) => e.preventDefault()}
                                                 className={cn(
                                                     "flex h-6 w-6 items-center justify-center rounded-md",
-                                                    "text-muted-foreground hover:bg-sidebar-accent-foreground/10 hover:text-foreground",
+                                                    "text-foreground hover:bg-sidebar-accent-foreground/10 hover:text-foreground",
                                                     "transition-colors",
                                                     isMenuOpen &&
                                                         "bg-sidebar-accent-foreground/10 text-foreground"
