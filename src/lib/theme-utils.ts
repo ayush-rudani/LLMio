@@ -1,5 +1,4 @@
 export const THEME_URLS = [
-    "https://tweakcn.com/themes/cmc335y45000n04ld51zg72j3",
     "https://tweakcn.com/editor/theme?theme=mono",
     "https://tweakcn.com/editor/theme?theme=t3-chat",
     "https://tweakcn.com/editor/theme?theme=tangerine",
@@ -13,7 +12,22 @@ export const THEME_URLS = [
     "https://tweakcn.com/editor/theme?theme=pastel-dreams",
     "https://tweakcn.com/editor/theme?theme=supabase",
     "https://tweakcn.com/editor/theme?theme=vercel",
-    "https://tweakcn.com/editor/theme?theme=cyberpunk"
+    "https://tweakcn.com/editor/theme?theme=cyberpunk",
+    "https://tweakcn.com/editor/theme?theme=amber-minimal",
+    "https://tweakcn.com/editor/theme?theme=amethyst-haze",
+    "https://tweakcn.com/editor/theme?theme=catppuccin",
+    "https://tweakcn.com/editor/theme?theme=claude",
+    "https://tweakcn.com/editor/theme?theme=clean-slate",
+    "https://tweakcn.com/editor/theme?theme=cosmic-night",
+    "https://tweakcn.com/editor/theme?theme=darkmatter",
+    "https://tweakcn.com/editor/theme?theme=doom-64",
+    "https://tweakcn.com/editor/theme?theme=elegant-luxury",
+    "https://tweakcn.com/editor/theme?theme=graphite",
+    "https://tweakcn.com/editor/theme?theme=midnight-bloom",
+    "https://tweakcn.com/editor/theme?theme=kodama-grove",
+    "https://tweakcn.com/editor/theme?theme=ocean-breeze",
+    "https://tweakcn.com/editor/theme?theme=pastel-dreams",
+    "https://tweakcn.com/editor/theme?theme=solar-dusk"
 ]
 
 export type ThemePreset = {

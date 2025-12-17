@@ -100,7 +100,7 @@ export const ThreadItem = memo(
                             <div
                                 className={cn(
                                     "absolute top-0 right-0 bottom-0 z-10 flex items-center",
-                                    "transition-transform duration-120 ease-in-out",
+                                    "transition-transform duration-125 ease-in-out",
                                     isMenuOpen
                                         ? "translate-x-0"
                                         : "translate-x-full group-hover/item:translate-x-0"
