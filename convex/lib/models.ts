@@ -213,6 +213,18 @@ export const MODELS_SHARED: SharedModel[] = [
         customIcon: "google"
     },
     {
+        id: "gemini-3-flash",
+        name: "Gemini 3 Flash",
+        shortName: "Gemini 3 Flash",
+        adapters: [
+            "i3-google:gemini-3-flash-preview",
+            "google:gemini-3-flash-preview",
+            "openrouter:google/gemini-3-flash-preview"
+        ],
+        abilities: ["vision", "function_calling", "reasoning", "pdf", "effort_control"],
+        supportsDisablingReasoning: true
+    },
+    {
         id: "gemini-2.5-flash",
         name: "Gemini 2.5 Flash",
         shortName: "2.5 Flash",
