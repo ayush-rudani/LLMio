@@ -25,3 +25,6 @@ bunx convex run migrations:runTitleModelMigration
 1. Define your migration in `convex/migrations.ts` using `migrations.define`.
 2. Add a runner for your migration using `migrations.runner`.
 3. Export the runner so it can be called via the CLI.
+
+
+### More on this here: https://www.convex.dev/components/migrations
