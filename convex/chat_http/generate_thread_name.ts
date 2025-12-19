@@ -85,9 +85,14 @@ Generate a title that accurately represents what this conversation is about base
             },
             {
                 role: "user",
-                content: `Here are the first 5 messages of the conversation:
+                content: `Conversation excerpt:
 
-${relevant_messages.map((message) => `${message.role}: ${contentToText(message.content)}`).join("\n")}
+${relevant_messages
+    .map((message) => {
+        const text = contentToText(message.content)
+        return `${message.role}: ${text.slice(0, 600)}${text.length > 600 ? "..." : ""}`
+    })
+    .join("\n")}
 
 Generate a title that accurately represents what this conversation is about based on the messages provided.`
             }
