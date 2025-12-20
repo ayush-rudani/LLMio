@@ -13,6 +13,21 @@ export const backfillUserThreadsAggregatesMigration = migrations.define({
     }
 })
 
+export const migrateTitleGenerationModel = migrations.define({
+    table: "settings",
+    migrateOne: async (ctx, doc) => {
+        if (doc.titleGenerationModel === "gemini-2.0-flash-lite") {
+            await ctx.db.patch(doc._id, {
+                titleGenerationModel: "gpt-oss-20b"
+            })
+        }
+    }
+})
+
 export const runAggregateBackfill = migrations.runner([
     internal.migrations.backfillUserThreadsAggregatesMigration
+])
+
+export const runTitleModelMigration = migrations.runner([
+    internal.migrations.migrateTitleGenerationModel
 ])

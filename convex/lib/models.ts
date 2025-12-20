@@ -76,6 +76,22 @@ export const MODELS_SHARED: SharedModel[] = [
         abilities: ["reasoning", "vision", "function_calling", "pdf", "effort_control"]
     },
     {
+        id: "gpt-oss-20b",
+        name: "GPT OSS 20B",
+        shortName: "GPT OSS 20B",
+        adapters: ["i3-groq:openai/gpt-oss-20b", "groq:openai/gpt-oss-20b"],
+        abilities: ["reasoning", "function_calling"],
+        customIcon: "openai"
+    },
+    {
+        id: "gpt-oss-120b",
+        name: "GPT OSS 120B",
+        shortName: "GPT OSS 120B",
+        adapters: ["groq:openai/gpt-oss-120b"],
+        abilities: ["reasoning", "function_calling"],
+        customIcon: "openai"
+    },
+    {
         id: "gpt-5",
         name: "GPT 5",
         shortName: "GPT 5",
@@ -110,24 +126,12 @@ export const MODELS_SHARED: SharedModel[] = [
         adapters: ["openai:gpt-4o-mini", "openrouter:openai/gpt-4o-mini"],
         abilities: ["vision", "function_calling", "pdf"]
     },
-    // {
-    //     id: "o3-mini",
-    //     name: "o3 mini",
-    //     adapters: ["openai:o3-mini", "openrouter:openai/o3-mini"],
-    //     abilities: ["reasoning", "function_calling", "effort_control"]
-    // },
     {
         id: "o4-mini",
         name: "o4 mini",
         adapters: ["openai:o4-mini", "openrouter:openai/o4-mini"],
         abilities: ["reasoning", "vision", "function_calling", "pdf", "effort_control"]
     },
-    // {
-    //     id: "o3",
-    //     name: "o3",
-    //     adapters: ["openai:o3", "openrouter:openai/o3"],
-    //     abilities: ["reasoning", "vision", "function_calling", "pdf", "effort_control"]
-    // },
     {
         id: "o3-pro",
         name: "o3 pro",
@@ -140,35 +144,6 @@ export const MODELS_SHARED: SharedModel[] = [
         adapters: ["openai:gpt-4.1", "openrouter:openai/gpt-4.1"],
         abilities: ["vision", "function_calling", "pdf"]
     },
-    // {
-    //     id: "gpt-4.1-mini",
-    //     name: "GPT 4.1 mini",
-    //     shortName: "4.1 mini",
-    //     adapters: [
-    //         "i3-openai:gpt-4.1-mini",
-    //         "openai:gpt-4.1-mini",
-    //         "openrouter:openai/gpt-4.1-mini"
-    //     ],
-    //     abilities: ["vision", "function_calling", "pdf"]
-    // },
-    // {
-    //     id: "gpt-4.1-nano",
-    //     name: "GPT 4.1 nano",
-    //     shortName: "4.1 nano",
-    //     adapters: [
-    //         "i3-openai:gpt-4.1-nano",
-    //         "openai:gpt-4.1-nano",
-    //         "openrouter:openai/gpt-4.1-nano"
-    //     ],
-    //     abilities: ["vision", "function_calling", "pdf"]
-    // }
-    // {
-    //     id: "claude-3-5-sonnet",
-    //     name: "Claude Sonnet 3.5",
-    //     shortName: "Sonnet 3.5",
-    //     adapters: ["anthropic:claude-3-5-sonnet", "openrouter:anthropic/claude-3.5-sonnet"],
-    //     abilities: ["vision", "function_calling", "pdf"]
-    // },
     {
         id: "claude-sonnet-4",
         name: "Claude Sonnet 4",
@@ -196,14 +171,6 @@ export const MODELS_SHARED: SharedModel[] = [
         supportsDisablingReasoning: true,
         customIcon: "anthropic"
     },
-    // {
-    //     id: "claude-3-7-sonnet",
-    //     name: "Claude Sonnet 3.7",
-    //     shortName: "Sonnet 3.7",
-    //     adapters: ["anthropic:claude-3-7-sonnet", "openrouter:anthropic/claude-3.7-sonnet"],
-    //     abilities: ["reasoning", "vision", "function_calling", "pdf", "effort_control"],
-    //     supportsDisablingReasoning: true
-    // },
     {
         id: "gemini-3-pro-preview",
         name: "Gemini 3 Pro Preview",
@@ -262,17 +229,6 @@ export const MODELS_SHARED: SharedModel[] = [
         adapters: ["i3-google:gemini-2.0-flash-exp", "google:gemini-2.0-flash-exp"],
         abilities: ["vision"]
     },
-    // {
-    //     id: "gemini-2.0-flash",
-    //     name: "Gemini 2.0 Flash",
-    //     shortName: "2.0 Flash",
-    //     adapters: [
-    //         "i3-google:gemini-2.0-flash",
-    //         "google:gemini-2.0-flash",
-    //         "openrouter:google/gemini-2.0-flash-001"
-    //     ],
-    //     abilities: ["vision", "function_calling", "pdf"]
-    // },
     {
         id: "gemini-2.5-pro",
         name: "Gemini 2.5 Pro",
@@ -392,39 +348,21 @@ export const MODELS_SHARED: SharedModel[] = [
         customIcon: "google",
         supportedImageSizes: ["1:1-hd", "16:9-hd", "9:16-hd", "3:4-hd", "4:3-hd"]
     },
-    // {
-    //     id: "llama-4-scout-17b-16e-instruct",
-    //     name: "Llama 4 Scout 17B 16E",
-    //     shortName: "Llama 4 Scout 17B",
-    //     adapters: [
-    //         "i3-groq:meta-llama/llama-4-scout-17b-16e-instruct",
-    //         "groq:meta-llama/llama-4-scout-17b-16e-instruct"
-    //     ],
-    //     abilities: ["vision"],
-    //     customIcon: "meta"
-    // },
-    // {
-    //     id: "llama-4-maverick-17b-128e-instruct",
-    //     name: "Llama 4 Maverick 17B 128E Instruct",
-    //     shortName: "Llama 4 Maverick 17B",
-    //     adapters: ["groq:meta-llama/llama-4-maverick-17b-128e-instruct"],
-    //     abilities: ["vision"],
-    //     customIcon: "meta"
-    // },
-    // {
-    //     id: "llama-3-1-8b-instant",
-    //     name: "Llama 3.1 8B Instant",
-    //     shortName: "Llama 3.1 8B",
-    //     adapters: ["i3-groq:llama-3.1-8b-instant", "groq:llama-3.1-8b-instant"],
-    //     abilities: [],
-    //     customIcon: "meta"
-    // },
+    {
+        id: "llama-3-1-8b-instant",
+        name: "Llama 3.1 8B Instant",
+        shortName: "Llama 3.1 8B",
+        adapters: ["i3-groq:llama-3.1-8b-instant", "groq:llama-3.1-8b-instant"],
+        abilities: [],
+        customIcon: "meta"
+    },
     {
         id: "whisper-large-v3-turbo",
         name: "Whisper Large v3 Turbo",
         adapters: ["groq:whisper-large-v3-turbo"],
         abilities: [],
-        mode: "speech-to-text"
+        mode: "speech-to-text",
+        customIcon: "openai"
     }
 ] as const
 
