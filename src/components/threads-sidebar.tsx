@@ -415,10 +415,10 @@ export function ThreadsSidebar() {
                                 resetChat()
                                 setOpenMobile(false)
                             }}
+                            className="flex items-center gap-2"
                         >
-                            <div className="h-auto w-full">
-                                <div className="font-bold text-2xl text-foreground">LLMio Chat</div>
-                            </div>
+                            <img src="/src/logo.svg" alt="Logo" className="h-8 w-8 flex-shrink-0" />
+                            <div className="font-bold text-2xl text-foreground">LLMio Chat</div>
                         </Link>
                     </div>
                     <div className="my-2 h-px w-full bg-border" />

@@ -4,7 +4,7 @@ A modern, feature-rich AI chat application built by interns, for interns. It's t
 
 ![intern3.chat](public/opengraph.jpg)
 
-🔗 **Live demo →** [https://intern3.chat](https://intern3.chat)
+🔗 **Live demo →** [https://llmio.ayushrudani.com](https://llmio.ayushrudani.com)
 
 📚 **Documentation →** [https://docs.intern3.chat](https://docs.intern3.chat)
 
@@ -38,7 +38,7 @@ A modern, feature-rich AI chat application built by interns, for interns. It's t
 ## Quick start
 
 ### Option 1: Use Hosted Version
-Simply visit [https://intern3.chat](https://intern3.chat) and sign up for an account.
+Simply visit [https://llmio.ayushrudani.com](https://llmio.ayushrudani.com) and sign up for an account.
 
 ### Option 2: Self-Hosted Deployment
 Follow our [Vercel deployment guide](https://docs.intern3.chat/deployment/vercel) to set up your own instance.
