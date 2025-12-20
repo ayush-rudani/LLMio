@@ -152,18 +152,9 @@ export function ThreadsSidebar() {
         loadMore
     } = useDiskCachedPaginatedQuery(
         api.threads.getUserThreadsPaginated,
-        {
-            key: "threads",
-            maxItems: 50
-        },
-        session?.user?.id && !auth.isLoading
-            ? {
-                  includeInFolder: false
-              }
-            : "skip",
-        {
-            initialNumItems: 50
-        }
+        { key: "threads", maxItems: 50 },
+        session?.user?.id && !auth.isLoading ? { includeInFolder: false } : "skip",
+        { initialNumItems: 50 }
     )
 
     // Get projects
