@@ -19,7 +19,7 @@ export const ArcPaths = ({ stroke }: { stroke: string }) => (
             d="M20.663,8.85C21.252,6.81 21.087,5.04 20.024,3.976C17.774,1.727 12.359,3.496 7.927,7.927C7.454,8.401 7.011,8.885 6.6,9.376"
             fill="none"
             stroke={stroke}
-            strokeWidth="1.35"
+            strokeWidth="1.50"
             strokeLinecap="round"
             strokeLinejoin="round"
         />
@@ -27,7 +27,7 @@ export const ArcPaths = ({ stroke }: { stroke: string }) => (
             d="M17.4,14.624C16.989,15.115 16.546,15.599 16.073,16.073C11.641,20.504 6.226,22.273 3.976,20.024C2.836,18.883 2.728,16.928 3.478,14.7"
             fill="none"
             stroke={stroke}
-            strokeWidth="1.35"
+            strokeWidth="1.50"
             strokeLinecap="round"
             strokeLinejoin="round"
         />
@@ -35,7 +35,7 @@ export const ArcPaths = ({ stroke }: { stroke: string }) => (
             d="M9.75,17.706C9.131,17.211 8.521,16.666 7.927,16.073C3.496,11.641 1.727,6.226 3.976,3.976C5.117,2.836 7.072,2.728 9.3,3.478"
             fill="none"
             stroke={stroke}
-            strokeWidth="1.35"
+            strokeWidth="1.50"
             strokeLinecap="round"
             strokeLinejoin="round"
         />
@@ -43,7 +43,7 @@ export const ArcPaths = ({ stroke }: { stroke: string }) => (
             d="M14.25,20.361C16.663,21.281 18.807,21.241 20.024,20.024C22.273,17.774 20.504,12.359 16.073,7.927C15.479,7.334 14.869,6.789 14.25,6.294"
             fill="none"
             stroke={stroke}
-            strokeWidth="1.35"
+            strokeWidth="1.50"
             strokeLinecap="round"
             strokeLinejoin="round"
         />
@@ -107,10 +107,10 @@ export function Logo() {
                             rotate: [0, 360]
                         }}
                         transition={{
-                            duration: 1.5,
-                            times: [0, 0.5, 1],
+                            duration: 2,
+                            times: [0, 1],
                             repeat: Number.POSITIVE_INFINITY,
-                            repeatDelay: 3
+                            repeatDelay: 2
                         }}
                         style={{ transformOrigin: "18.5px 5.5px" }}
                     >
