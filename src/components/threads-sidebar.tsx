@@ -19,6 +19,7 @@ import { authClient } from "@/lib/auth-client"
 import { useChatStore } from "@/lib/chat-store"
 import { useDiskCachedPaginatedQuery, useDiskCachedQuery } from "@/lib/convex-cached-query"
 import { cn } from "@/lib/utils"
+import Logo from "@/logo.svg"
 import { Link } from "@tanstack/react-router"
 import { useNavigate } from "@tanstack/react-router"
 import { useConvexAuth } from "convex/react"
@@ -408,7 +409,9 @@ export function ThreadsSidebar() {
                             }}
                             className="flex items-center gap-2"
                         >
-                            <img src="/src/logo.svg" alt="Logo" className="h-8 w-8 flex-shrink-0" />
+                            <div className="h-8 w-8 flex-shrink-0 [&>svg]:h-full [&>svg]:w-full">
+                                <Logo />
+                            </div>
                             <div className="font-bold text-2xl text-foreground">LLMio Chat</div>
                         </Link>
                     </div>
