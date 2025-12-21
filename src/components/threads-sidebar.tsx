@@ -19,6 +19,7 @@ import { authClient } from "@/lib/auth-client"
 import { useChatStore } from "@/lib/chat-store"
 import { useDiskCachedPaginatedQuery, useDiskCachedQuery } from "@/lib/convex-cached-query"
 import { cn } from "@/lib/utils"
+import Logo from "@/logo.svg"
 import { Link } from "@tanstack/react-router"
 import { useNavigate } from "@tanstack/react-router"
 import { useConvexAuth } from "convex/react"
@@ -152,18 +153,9 @@ export function ThreadsSidebar() {
         loadMore
     } = useDiskCachedPaginatedQuery(
         api.threads.getUserThreadsPaginated,
-        {
-            key: "threads",
-            maxItems: 50
-        },
-        session?.user?.id && !auth.isLoading
-            ? {
-                  includeInFolder: false
-              }
-            : "skip",
-        {
-            initialNumItems: 50
-        }
+        { key: "threads", maxItems: 50 },
+        session?.user?.id && !auth.isLoading ? { includeInFolder: false } : "skip",
+        { initialNumItems: 50 }
     )
 
     // Get projects
@@ -415,10 +407,12 @@ export function ThreadsSidebar() {
                                 resetChat()
                                 setOpenMobile(false)
                             }}
+                            className="flex items-center gap-2"
                         >
-                            <div className="h-auto w-full">
-                                <div className="font-bold text-2xl text-foreground">LLMio Chat</div>
+                            <div className="h-8 w-8 flex-shrink-0 [&>svg]:h-full [&>svg]:w-full">
+                                <Logo />
                             </div>
+                            <div className="font-bold text-2xl text-foreground">LLMio Chat</div>
                         </Link>
                     </div>
                     <div className="my-2 h-px w-full bg-border" />

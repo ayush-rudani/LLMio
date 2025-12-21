@@ -127,7 +127,7 @@ const ChatContent = ({ threadId: routeThreadId, folderId }: ChatProps) => {
                         transition={{ duration: 0.2, ease: "easeInOut" }}
                         className="absolute inset-0 flex flex-col items-center justify-center"
                     >
-                        <div className="mb-6 size-16 rounded-full border-2 opacity-80">
+                        <div className="mb-6 size-16 rounded-full border-2 opacity-100">
                             <Logo />
                         </div>
                         <motion.div
