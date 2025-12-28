@@ -3,9 +3,10 @@ import type { Infer } from "convex/values"
 import type { Message } from "../schema"
 import type { AIMessage } from "../schema/message"
 
-type AIUIMessageWithParts = Omit<undefined, "parts"> & {
-    parts: NonNullable<undefined["parts"]>
+// Custom type that extends UIMessage with metadata and createdAt
+export type AIUIMessageWithParts = AIUIMessage & {
     metadata?: Infer<typeof AIMessage>["metadata"]
+    createdAt?: Date
 }
 
 export const backendToUiMessages = (messages: Infer<typeof Message>[]): AIUIMessageWithParts[] => {
@@ -19,8 +20,7 @@ export const backendToUiMessages = (messages: Infer<typeof Message>[]): AIUIMess
             id: message.messageId,
             role: message.role,
             createdAt: new Date(message.createdAt),
-            content: message.parts?.find((p) => p.type === "text")?.text || "",
-            parts: (message.parts as unknown as NonNullable<undefined["parts"]>) ?? []
+            parts: (message.parts as unknown as AIUIMessage["parts"]) ?? []
         }
         return uiMessage
     })

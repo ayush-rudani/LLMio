@@ -64,11 +64,7 @@ export const generateThreadName = async (
         messages: [
             {
                 role: "system",
-
-                parts: [{
-                    type: 'text',
-
-                    text: `
+                content: `
     You are tasked with generating a concise, descriptive title for a chat conversation based on the initial messages. The title should:
 
     1. Be 2-6 words long
@@ -86,15 +82,10 @@ export const generateThreadName = async (
     - "Career Change Advice"
 
     Generate a title that accurately represents what this conversation is about based on the messages provided.`
-                }]
             },
             {
                 role: "user",
-
-                parts: [{
-                    type: 'text',
-
-                    text: `Conversation excerpt:
+                content: `Conversation excerpt:
 
     ${relevant_messages
         .map((message) => {
@@ -104,7 +95,6 @@ export const generateThreadName = async (
         .join("\n")}
 
     Generate a title that accurately represents what this conversation is about based on the messages provided.`
-                }]
             }
         ]
     })

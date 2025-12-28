@@ -23,7 +23,7 @@ import { AnimatePresence, MotionConfig, motion } from "motion/react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
-import { z } from 'zod/v3';
+import { z } from "zod/v3"
 import { GoogleIcon } from "../brand-icons"
 
 const emailSchema = z.object({
@@ -60,21 +60,21 @@ export function AuthCard() {
     const [email, setEmail] = useState("")
 
     const emailForm = useForm<EmailFormValues>({
-        resolver: zodResolver(emailSchema),
+        resolver: zodResolver(emailSchema as any),
         defaultValues: {
             email: ""
         }
     })
 
     const otpForm = useForm<OTPFormValues>({
-        resolver: zodResolver(otpSchema),
+        resolver: zodResolver(otpSchema as any),
         defaultValues: {
             otp: ""
         }
     })
 
     const nameForm = useForm<NameFormValues>({
-        resolver: zodResolver(nameSchema),
+        resolver: zodResolver(nameSchema as any),
         defaultValues: {
             name: ""
         }

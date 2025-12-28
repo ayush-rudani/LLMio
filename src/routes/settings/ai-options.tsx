@@ -62,6 +62,9 @@ function AIOptionsSettings() {
 
     if (!session.user?.id || !userSettings) return null
 
+    // Handle error response from getUserSettings
+    if ("error" in userSettings) return null
+
     const availableSearchProviders = getAvailableSearchProviders(userSettings)
 
     const handleSearchProviderChange = async (provider: SearchProvider) => {

@@ -104,7 +104,7 @@ When you generate this migration checklist, you must IMMEDIATELY:
 ### 3.1 Run Codemods
 - [x] **ACTION**: Run codemod: `npx @ai-sdk/codemod@latest v5`
 - [x] **ACTION**: Review changes with `git diff`
-- [ ] **ACTION**: Commit codemod changes: `git add -A && git commit -m "Apply AI SDK 5 codemods"`
+- [x] **ACTION**: Commit codemod changes: `git add -A && git commit -m "Apply AI SDK 5 codemods"`
 
 **Note:** Codemods fix ~80% of breaking changes automatically.
 

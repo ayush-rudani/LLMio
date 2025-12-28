@@ -1,5 +1,5 @@
 import { ChatError } from "@/lib/errors"
-import { createUIMessageStream } from "ai"
+import { JsonToSseTransformStream, createUIMessageStream } from "ai"
 import type { Infer } from "convex/values"
 import { differenceInSeconds } from "date-fns"
 import { internal } from "../_generated/api"
@@ -54,7 +54,11 @@ export const chatGET = httpAction(async (ctx, req) => {
         execute: () => {}
     })
 
-    const stream = await streamContext.resumableStream(recentStreamId._id, () => emptyDataStream)
+    // Cast the stream type - resumable-stream works with the JSON serialized stream
+    const stream = await streamContext.resumableStream(
+        recentStreamId._id,
+        () => emptyDataStream as unknown as ReadableStream<string>
+    )
 
     /*
      * For when the generation is streaming during SSR
@@ -67,34 +71,54 @@ export const chatGET = httpAction(async (ctx, req) => {
         const mostRecentMessage = messages.at(-1)
 
         if (!mostRecentMessage) {
-            return new Response(emptyDataStream.pipeThrough(new TextEncoderStream()), RESPONSE_OPTS)
+            return new Response(
+                emptyDataStream
+                    .pipeThrough(new JsonToSseTransformStream())
+                    .pipeThrough(new TextEncoderStream()),
+                RESPONSE_OPTS
+            )
         }
 
         if (mostRecentMessage.role !== "assistant") {
-            return new Response(emptyDataStream.pipeThrough(new TextEncoderStream()), RESPONSE_OPTS)
+            return new Response(
+                emptyDataStream
+                    .pipeThrough(new JsonToSseTransformStream())
+                    .pipeThrough(new TextEncoderStream()),
+                RESPONSE_OPTS
+            )
         }
 
         const messageCreatedAt = new Date(mostRecentMessage.createdAt)
 
         if (differenceInSeconds(resumeRequestedAt, messageCreatedAt) > 15) {
-            return new Response(emptyDataStream.pipeThrough(new TextEncoderStream()), RESPONSE_OPTS)
+            return new Response(
+                emptyDataStream
+                    .pipeThrough(new JsonToSseTransformStream())
+                    .pipeThrough(new TextEncoderStream()),
+                RESPONSE_OPTS
+            )
         }
 
         const restoredStream = createUIMessageStream({
-            execute: (buffer) => {
-                buffer.write({
-                    'type': 'data',
-
-                    'value': [{
-                        type: "append-message",
-                        message: JSON.stringify(mostRecentMessage)
-                    }]
+            execute: ({ writer }) => {
+                writer.write({
+                    type: "data-append_message",
+                    id: "append_message",
+                    data: JSON.stringify(mostRecentMessage)
                 })
             }
         })
 
-        return new Response(restoredStream.pipeThrough(new TextEncoderStream()), RESPONSE_OPTS)
+        return new Response(
+            restoredStream
+                .pipeThrough(new JsonToSseTransformStream())
+                .pipeThrough(new TextEncoderStream()),
+            RESPONSE_OPTS
+        )
     }
 
-    return new Response(stream.pipeThrough(new TextEncoderStream()), RESPONSE_OPTS)
+    return new Response(
+        stream.pipeThrough(new JsonToSseTransformStream()).pipeThrough(new TextEncoderStream()),
+        RESPONSE_OPTS
+    )
 })

@@ -7,6 +7,18 @@ import { Badge } from "./ui/badge"
 import { Button } from "./ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 
+// Custom type to match our DB schema (v4-compatible format)
+type DBToolInvocationPart = {
+    type: "tool-invocation"
+    toolInvocation: {
+        state: "call" | "result" | "partial-call"
+        args?: unknown
+        result?: unknown
+        toolCallId: string
+        toolName: string
+    }
+}
+
 export const ChatActions = memo(
     ({
         role,
@@ -27,33 +39,25 @@ export const ChatActions = memo(
                 const casted = message.metadata as { modelName?: string }
                 if (casted.modelName) return casted.modelName
             }
-            const found = message.annotations?.find(
-                (annotation) =>
-                    annotation &&
-                    typeof annotation === "object" &&
-                    "type" in annotation &&
-                    annotation.type === "model_name"
-            )
-            if (found && typeof found === "object" && "content" in found) {
-                return found.content?.toString()
-            }
+            // Note: annotations were removed in AI SDK v5, we now use metadata only
             return undefined
-        }, [
-            message.annotations?.length,
-            (message as { metadata?: { modelName?: string } }).metadata
-        ])
+        }, [(message as { metadata?: { modelName?: string } }).metadata])
 
         const imageGenerationAssets = useMemo(() => {
             const assets: string[] = []
             message.parts
                 .filter((part) => part.type === "tool-invocation")
                 .forEach((part) => {
-                    /* FIXME(@ai-sdk-upgrade-v5): The `part.toolInvocation.toolName` property has been removed. Please manually migrate following https://ai-sdk.dev/docs/migration-guides/migration-guide-5-0#tool-part-type-changes-uimessage */
-                    /* FIXME(@ai-sdk-upgrade-v5): The `part.toolInvocation.state` property has been removed. Please manually migrate following https://ai-sdk.dev/docs/migration-guides/migration-guide-5-0#tool-part-type-changes-uimessage */
-                    if (part.toolInvocation.toolName === "image_generation" &&
-                    part.toolInvocation.state === "result" &&
-                    part.toolInvocation.result?.assets) {
-                        part.toolInvocation.result.assets.forEach((asset: any) => {
+                    // DB stores parts with nested `toolInvocation` (v4 format)
+                    const dbPart = part as unknown as DBToolInvocationPart
+                    const toolInvocation = dbPart.toolInvocation
+                    if (
+                        toolInvocation.toolName === "image_generation" &&
+                        toolInvocation.state === "result" &&
+                        (toolInvocation.result as { assets?: { imageUrl?: string }[] })?.assets
+                    ) {
+                        const result = toolInvocation.result as { assets: { imageUrl?: string }[] }
+                        result.assets.forEach((asset) => {
                             if (asset.imageUrl) {
                                 assets.push(asset.imageUrl)
                             }
