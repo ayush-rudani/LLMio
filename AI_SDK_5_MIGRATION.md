@@ -93,7 +93,7 @@ When you generate this migration checklist, you must IMMEDIATELY:
 - [x] **ACTION**: Run `pnpm install`
 
 ### 2.5 Commit Changes
-- [ ] **ACTION**: Commit package updates: `git add package.json pnpm-lock.yaml && git commit -m "Update to AI SDK 5"`
+- [x] **ACTION**: Commit package updates: `git add package.json pnpm-lock.yaml && git commit -m "Update to AI SDK 5"`
 
 **After completing Phase 2, update this file to mark items as [x], then proceed to Phase 3.**
 
@@ -102,17 +102,19 @@ When you generate this migration checklist, you must IMMEDIATELY:
 ## Phase 3: Run Automated Codemods
 
 ### 3.1 Run Codemods
-- [ ] **ACTION**: Run codemod: `npx @ai-sdk/codemod@latest v5`
-- [ ] **ACTION**: Review changes with `git diff`
+- [x] **ACTION**: Run codemod: `npx @ai-sdk/codemod@latest v5`
+- [x] **ACTION**: Review changes with `git diff`
 - [ ] **ACTION**: Commit codemod changes: `git add -A && git commit -m "Apply AI SDK 5 codemods"`
 
 **Note:** Codemods fix ~80% of breaking changes automatically.
 
 ### 3.2 Find All FIXME Comments
-- [ ] **ACTION**: Search entire codebase: `grep -r "FIXME" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" .`
-- [ ] **ACTION**: List ALL FIXME locations with file paths and line numbers
-- [ ] **INFO**: Total FIXME comments found: ___
-- [ ] **ACTION**: Create a plan for addressing each FIXME in Phase 4
+- [x] **ACTION**: Search entire codebase: `grep -r "FIXME" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" .`
+- [x] **ACTION**: List ALL FIXME locations with file paths and line numbers
+- [x] **INFO**: Total FIXME comments found: 2
+  - src/components/chat-actions.tsx:51 - toolInvocation.toolName removed
+  - src/components/chat-actions.tsx:52 - toolInvocation.state removed
+- [x] **ACTION**: Create a plan for addressing each FIXME in Phase 4
 
 **After completing Phase 3, update this file to mark items as [x], then proceed to Phase 4.**
 

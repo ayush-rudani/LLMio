@@ -103,7 +103,6 @@ export const getModel = async (ctx: ActionCtx, modelId: string) => {
         const sdk_provider = createOpenAI({
             baseURL: provider.endpoint,
             apiKey: provider.key,
-            compatibility: "compatible",
             name: provider.name
         })
         if (model.mode === "image") {

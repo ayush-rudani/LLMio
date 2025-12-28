@@ -1,5 +1,5 @@
 import { ChatError } from "@/lib/errors"
-import { createDataStream } from "ai"
+import { createUIMessageStream } from "ai"
 import type { Infer } from "convex/values"
 import { differenceInSeconds } from "date-fns"
 import { internal } from "../_generated/api"
@@ -50,7 +50,7 @@ export const chatGET = httpAction(async (ctx, req) => {
 
     if (!recentStreamId) return new ChatError("not_found:stream").toResponse()
 
-    const emptyDataStream = createDataStream({
+    const emptyDataStream = createUIMessageStream({
         execute: () => {}
     })
 
@@ -80,11 +80,15 @@ export const chatGET = httpAction(async (ctx, req) => {
             return new Response(emptyDataStream.pipeThrough(new TextEncoderStream()), RESPONSE_OPTS)
         }
 
-        const restoredStream = createDataStream({
+        const restoredStream = createUIMessageStream({
             execute: (buffer) => {
-                buffer.writeData({
-                    type: "append-message",
-                    message: JSON.stringify(mostRecentMessage)
+                buffer.write({
+                    'type': 'data',
+
+                    'value': [{
+                        type: "append-message",
+                        message: JSON.stringify(mostRecentMessage)
+                    }]
                 })
             }
         })

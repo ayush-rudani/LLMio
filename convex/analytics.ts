@@ -40,11 +40,11 @@ export const getMyUsageStats = query({
                 modelId: model.id,
                 modelName: model.name,
                 requests: modelEvents.length,
-                promptTokens: modelEvents.reduce((sum, e) => sum + e.p, 0),
-                completionTokens: modelEvents.reduce((sum, e) => sum + e.c, 0),
+                inputTokens: modelEvents.reduce((sum, e) => sum + e.p, 0),
+                outputTokens: modelEvents.reduce((sum, e) => sum + e.c, 0),
                 reasoningTokens: modelEvents.reduce((sum, e) => sum + e.r, 0),
                 totalTokens: modelEvents.reduce((sum, e) => sum + e.p + e.c + e.r, 0)
-            }
+            };
         }).filter((stat) => stat.requests > 0)
 
         const totalRequests = events.length
@@ -133,8 +133,8 @@ export const getMyUsageChartData = query({
                         hourData.models[model.id] = {
                             requests: modelEvents.length,
                             tokens: modelEvents.reduce((sum, e) => sum + e.p + e.c + e.r, 0),
-                            promptTokens: modelEvents.reduce((sum, e) => sum + e.p, 0),
-                            completionTokens: modelEvents.reduce((sum, e) => sum + e.c, 0),
+                            inputTokens: modelEvents.reduce((sum, e) => sum + e.p, 0),
+                            outputTokens: modelEvents.reduce((sum, e) => sum + e.c, 0),
                             reasoningTokens: modelEvents.reduce((sum, e) => sum + e.r, 0)
                         }
                     }
@@ -186,8 +186,8 @@ export const getMyUsageChartData = query({
                     dayData.models[model.id] = {
                         requests: modelEvents.length,
                         tokens: modelEvents.reduce((sum, e) => sum + e.p + e.c + e.r, 0),
-                        promptTokens: modelEvents.reduce((sum, e) => sum + e.p, 0),
-                        completionTokens: modelEvents.reduce((sum, e) => sum + e.c, 0),
+                        inputTokens: modelEvents.reduce((sum, e) => sum + e.p, 0),
+                        outputTokens: modelEvents.reduce((sum, e) => sum + e.c, 0),
                         reasoningTokens: modelEvents.reduce((sum, e) => sum + e.r, 0)
                     }
                 }
@@ -211,11 +211,11 @@ export const getMyModelUsage = query({
             return {
                 modelId,
                 requests: 0,
-                promptTokens: 0,
-                completionTokens: 0,
+                inputTokens: 0,
+                outputTokens: 0,
                 reasoningTokens: 0,
                 totalTokens: 0
-            }
+            };
         }
 
         const days = timeframe === "1d" ? 1 : timeframe === "7d" ? 7 : 30
@@ -231,11 +231,11 @@ export const getMyModelUsage = query({
         return {
             modelId,
             requests: events.length,
-            promptTokens: events.reduce((sum, e) => sum + e.p, 0),
-            completionTokens: events.reduce((sum, e) => sum + e.c, 0),
+            inputTokens: events.reduce((sum, e) => sum + e.p, 0),
+            outputTokens: events.reduce((sum, e) => sum + e.c, 0),
             reasoningTokens: events.reduce((sum, e) => sum + e.r, 0),
             totalTokens: events.reduce((sum, e) => sum + e.p + e.c + e.r, 0),
             timeframe
-        }
+        };
     }
 })

@@ -7,7 +7,7 @@ import { useAutoResume } from "@/hooks/use-auto-resume"
 import { browserEnv } from "@/lib/browser-env"
 import { useChatStore } from "@/lib/chat-store"
 import { useModelStore } from "@/lib/model-store"
-import { type Message, useChat } from "@ai-sdk/react"
+import { type Message, useChat, DefaultChatTransport } from "@ai-sdk/react";
 import { useQuery as useConvexQuery } from "convex-helpers/react/cache"
 import type { Infer } from "convex/values"
 import { nanoid } from "nanoid"
@@ -77,12 +77,15 @@ export function useChatIntegration<IsShared extends boolean>({
             : threadId === undefined
               ? `new_chat_${rerenderTrigger}`
               : threadId,
+
         headers: isShared
             ? {}
             : {
                   authorization: `Bearer ${tokenData.token}`
               },
+
         experimental_throttle: 50,
+
         experimental_prepareRequestBody(body) {
             // Skip request preparation for shared threads since they're read-only
             if (isShared) return null
@@ -116,14 +119,16 @@ export function useChatIntegration<IsShared extends boolean>({
                 mcpOverrides
             }
         },
+
         initialMessages,
+
         onFinish: () => {
             if (!isShared && shouldUpdateQuery) {
                 setShouldUpdateQuery(false)
                 triggerRerender()
             }
         },
-        api: isShared ? undefined : `${browserEnv("VITE_CONVEX_API_URL")}/chat`,
+
         generateId: () => {
             if (seededNextId.current) {
                 const id = seededNextId.current
@@ -131,7 +136,11 @@ export function useChatIntegration<IsShared extends boolean>({
                 return id
             }
             return nanoid()
-        }
+        },
+
+        transport: new DefaultChatTransport({
+            api: isShared ? undefined : `${browserEnv("VITE_CONVEX_API_URL")}/chat`
+        })
     })
 
     const customResume = useCallback(() => {

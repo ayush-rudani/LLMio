@@ -31,7 +31,7 @@ export type SharedModel<Abilities extends ModelAbility[] = ModelAbility[]> = {
     abilities: Abilities
     mode?: "text" | "image" | "speech-to-text"
     contextLength?: number
-    maxTokens?: number
+    maxOutputTokens?: number
     supportedImageSizes?: ImageSize[]
     customIcon?:
         | "stability-ai"
@@ -377,9 +377,8 @@ export const createProvider = (
     switch (providerId) {
         case "openai":
             return createOpenAI({
-                apiKey: apiKey === "internal" ? process.env.OPENAI_API_KEY : apiKey,
-                compatibility: "strict"
-            })
+                apiKey: apiKey === "internal" ? process.env.OPENAI_API_KEY : apiKey
+            });
         case "anthropic":
             return createAnthropic({
                 apiKey: apiKey === "internal" ? process.env.ANTHROPIC_API_KEY : apiKey

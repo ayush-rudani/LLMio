@@ -14,7 +14,7 @@ import type { Message } from "../schema/message"
 import type { ModelAbility } from "../schema/settings"
 import { getFileTypeInfo, isImageMimeType } from "./file_constants"
 
-export type CoreMessage = (CoreAssistantMessage | CoreToolMessage | CoreUserMessage) & {
+export type ModelMessage = (CoreAssistantMessage | CoreToolMessage | CoreUserMessage) & {
     messageId: string
 }
 const r2 = new R2(components.r2)
@@ -22,8 +22,8 @@ const r2 = new R2(components.r2)
 export const dbMessagesToCore = async (
     messages: Infer<typeof Message>[],
     modelAbilities: ModelAbility[]
-): Promise<CoreMessage[]> => {
-    const mapped_messages: CoreMessage[] = []
+): Promise<ModelMessage[]> => {
+    const mapped_messages: ModelMessage[] = []
     for await (const message of messages) {
         const to_commit_messages: ((CoreAssistantMessage | CoreToolMessage | CoreUserMessage) & {
             messageId: string
@@ -43,18 +43,18 @@ export const dbMessagesToCore = async (
                     mapped_content.push({ type: "text", text: p.text })
                 }
                 if (p.type === "file") {
-                    const _extract = p.data.startsWith("attachments/")
-                        ? (p.data.split("/").pop() ?? "")
+                    const _extract = p.file.data.startsWith("attachments/")
+                        ? (p.file.data.split("/").pop() ?? "")
                         : ""
                     const extractedFileName = _extract.length > 51 ? _extract.slice(51) : _extract
 
                     const filename = p.filename || extractedFileName
-                    const fileTypeInfo = getFileTypeInfo(filename, p.mimeType)
+                    const fileTypeInfo = getFileTypeInfo(filename, p.file.mediaType)
 
-                    if (fileTypeInfo.isImage && isImageMimeType(p.mimeType || "")) {
+                    if (fileTypeInfo.isImage && isImageMimeType(p.file.mediaType || "")) {
                         // Handle image files
                         try {
-                            const fileUrl = await r2.getUrl(p.data)
+                            const fileUrl = await r2.getUrl(p.file.data)
                             const data = await fetch(fileUrl)
 
                             if (data.ok) {
@@ -65,20 +65,20 @@ export const dbMessagesToCore = async (
                                 })
                             } else {
                                 console.warn(
-                                    `[cvx][chat] Failed to fetch image file ${p.data}: ${data.status} ${data.statusText}`
+                                    `[cvx][chat] Failed to fetch image file ${p.file.data}: ${data.status} ${data.statusText}`
                                 )
                                 failedFileFetch("image", filename)
                             }
                         } catch (error) {
                             console.warn(
-                                `[cvx][chat] Error processing image file ${p.data}:`,
+                                `[cvx][chat] Error processing image file ${p.file.data}:`,
                                 error
                             )
                             failedFileFetch("image", filename)
                         }
                     } else if (fileTypeInfo.isText && !fileTypeInfo.isImage) {
                         try {
-                            const fileUrl = await r2.getUrl(p.data)
+                            const fileUrl = await r2.getUrl(p.file.data)
                             const data = await fetch(fileUrl)
 
                             if (data.ok) {
@@ -89,35 +89,38 @@ export const dbMessagesToCore = async (
                                 })
                             } else {
                                 console.warn(
-                                    `[cvx][chat] Failed to fetch text file ${p.data}: ${data.status} ${data.statusText}`
+                                    `[cvx][chat] Failed to fetch text file ${p.file.data}: ${data.status} ${data.statusText}`
                                 )
                                 failedFileFetch("text", filename)
                             }
                         } catch (error) {
-                            console.warn(`[cvx][chat] Error processing text file ${p.data}:`, error)
+                            console.warn(`[cvx][chat] Error processing text file ${p.file.data}:`, error)
                             failedFileFetch("text", filename)
                         }
                     } else if (fileTypeInfo.isPdf && modelAbilities.includes("pdf")) {
                         try {
-                            const fileUrl = await r2.getUrl(p.data)
+                            const fileUrl = await r2.getUrl(p.file.data)
                             const data = await fetch(fileUrl)
 
                             if (data.ok) {
                                 const blob = await data.blob()
                                 mapped_content.push({
                                     type: "file",
-                                    mimeType: "application/pdf",
-                                    filename: filename,
-                                    data: await blob.arrayBuffer()
+
+                                    file: {
+                                        mediaType: "application/pdf",
+                                        filename: filename,
+                                        data: await blob.arrayBuffer()
+                                    }
                                 })
                             } else {
                                 console.warn(
-                                    `[cvx][chat] Failed to fetch text file ${p.data}: ${data.status} ${data.statusText}`
+                                    `[cvx][chat] Failed to fetch text file ${p.file.data}: ${data.status} ${data.statusText}`
                                 )
                                 failedFileFetch("pdf", filename)
                             }
                         } catch (error) {
-                            console.warn(`[cvx][chat] Error processing text file ${p.data}:`, error)
+                            console.warn(`[cvx][chat] Error processing text file ${p.file.data}:`, error)
                             failedFileFetch("pdf", filename)
                         }
                     } else {
@@ -125,7 +128,7 @@ export const dbMessagesToCore = async (
                             type: "text",
                             text: fileTypeInfo.isPdf
                                 ? "<internal-system-error>PDF files are not supported by this model. Please try again with a different model.</internal-system-error>"
-                                : `<internal-system-error>Unsupported file type: ${filename} (${p.mimeType})</internal-system-error>`
+                                : `<internal-system-error>Unsupported file type: ${filename} (${p.file.mediaType})</internal-system-error>`
                         })
                     }
                 }
@@ -160,22 +163,28 @@ export const dbMessagesToCore = async (
                 if (p.type === "text") {
                     mapped_content.push({ type: "text", text: p.text })
                 } else if (p.type === "file") {
-                    if (p.mimeType?.startsWith("image/") && p.data.startsWith("generations/")) {
-                        const fileUrl = await r2.getUrl(p.data)
+                    if (p.file.mediaType?.startsWith("image/") && p.file.data.startsWith("generations/")) {
+                        const fileUrl = await r2.getUrl(p.file.data)
                         const data = await fetch(fileUrl)
                         const blob = await data.blob()
                         mapped_content.push({
                             type: "file",
-                            mimeType: p.mimeType || "image/png",
-                            filename: p.filename || "",
-                            data: await blob.arrayBuffer()
+
+                            file: {
+                                mediaType: p.file.mediaType || "image/png",
+                                filename: p.filename || "",
+                                data: await blob.arrayBuffer()
+                            }
                         })
                     } else {
                         mapped_content.push({
                             type: "file",
-                            mimeType: p.mimeType || "application/octet-stream",
-                            filename: p.filename || "",
-                            data: p.data || ""
+
+                            file: {
+                                mediaType: p.file.mediaType || "application/octet-stream",
+                                filename: p.filename || "",
+                                data: p.file.data || ""
+                            }
                         })
                     }
                 } else if (p.type === "tool-invocation") {
@@ -195,7 +204,7 @@ export const dbMessagesToCore = async (
                 } else if (p.type === "reasoning") {
                     mapped_content.push({
                         type: "reasoning",
-                        text: p.reasoning
+                        text: p.reasoningText
                     })
                 }
             }

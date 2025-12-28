@@ -4,7 +4,7 @@ import type {
     ReasoningUIPart,
     TextUIPart,
     ToolInvocationUIPart
-} from "@ai-sdk/ui-utils"
+} from 'ai'
 
 import { DelayedPromise } from "@/lib/delayed-promise"
 import { type TextStreamPart, type ToolCall, formatDataStreamPart } from "ai"
@@ -39,7 +39,7 @@ export const manualStreamTransform = (
             if (type === "text") {
                 ;(parts[parts.length - 1] as TextUIPart).text += text
             } else if (type === "reasoning") {
-                ;(parts[parts.length - 1] as ReasoningUIPart).reasoning += text
+                ;(parts[parts.length - 1] as ReasoningUIPart).reasoningText += text
                 ;(
                     parts[parts.length - 1] as ReasoningUIPart & {
                         duration?: number
@@ -58,7 +58,7 @@ export const manualStreamTransform = (
                 }
                 parts.push({
                     type: "reasoning",
-                    reasoning: text,
+                    reasoningText: text,
                     details: []
                 })
             }
@@ -120,8 +120,11 @@ export const manualStreamTransform = (
 
                         parts.push({
                             type: "file",
-                            mimeType: chunk.mimeType,
-                            data: storedKey
+
+                            file: {
+                                mediaType: chunk.mimeType,
+                                data: storedKey
+                            }
                         })
 
                         promise.resolve()
@@ -191,10 +194,14 @@ export const manualStreamTransform = (
 
                 case "tool-result": {
                     controller.enqueue(
-                        formatDataStreamPart("tool_result", {
-                            toolCallId: chunk.toolCallId,
-                            result: chunk.result
-                        })
+                        {
+                            'type': 'tool-result',
+
+                            'value': {
+                                toolCallId: chunk.toolCallId,
+                                result: chunk.result
+                            }
+                        }
                     )
 
                     const found = parts.findIndex(
@@ -254,27 +261,27 @@ export const manualStreamTransform = (
                         formatDataStreamPart("finish_step", {
                             finishReason: chunk.finishReason,
                             usage: {
-                                promptTokens: chunk.usage.promptTokens,
-                                completionTokens: chunk.usage.completionTokens
+                                inputTokens: chunk.usage.inputTokens,
+                                outputTokens: chunk.usage.outputTokens
                             },
                             isContinued: chunk.isContinued
                         })
                     )
-                    totalTokenUsage.promptTokens += chunk.usage.promptTokens || 0
-                    totalTokenUsage.completionTokens += chunk.usage.completionTokens || 0
+                    totalTokenUsage.inputTokens += chunk.usage.inputTokens || 0
+                    totalTokenUsage.outputTokens += chunk.usage.outputTokens || 0
 
                     console.log(
                         "chunk.providerMetadata",
-                        chunk.providerMetadata,
+                        chunk.providerOptions,
                         "totalTokenUsage",
                         totalTokenUsage
                     )
                     if (
-                        chunk.providerMetadata?.openai?.reasoningTokens &&
-                        typeof chunk.providerMetadata.openai.reasoningTokens === "number"
+                        chunk.providerOptions?.openai?.reasoningTokens &&
+                        typeof chunk.providerOptions.openai.reasoningTokens === "number"
                     ) {
                         totalTokenUsage.reasoningTokens +=
-                            chunk.providerMetadata.openai.reasoningTokens
+                            chunk.providerOptions.openai.reasoningTokens
                     }
                     break
                 }
@@ -289,5 +296,5 @@ export const manualStreamTransform = (
                 }
             }
         }
-    })
+    });
 }

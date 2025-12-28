@@ -25,7 +25,10 @@ const extractFileName = (data: string) => {
 }
 
 const getFileIcon = (part: { data: string; filename?: string; mimeType?: string }) => {
-    const { isImage, isCode, isPdf } = getFileTypeInfo(extractFileName(part.data), part.mimeType)
+    const { isImage, isCode, isPdf } = getFileTypeInfo(
+        extractFileName(part.file.data),
+        part.file.mediaType
+    )
 
     if (isImage) return <ImageIcon className="size-4 text-blue-500" />
     if (isCode) return <Code className="size-4 text-green-500" />
@@ -41,9 +44,9 @@ const FileAttachment = memo(
         part: { data: string; filename?: string; mimeType?: string }
         onPreview?: () => void
     }) => {
-        const { isImage } = getFileTypeInfo(extractFileName(part.data), part.mimeType)
+        const { isImage } = getFileTypeInfo(extractFileName(part.file.data), part.file.mediaType)
 
-        const extractedFileName = extractFileName(part.data)
+        const extractedFileName = extractFileName(part.file.data)
 
         const fileName = part.filename || extractedFileName
         const [imageError, setImageError] = useState(false)
@@ -87,7 +90,7 @@ const FileAttachment = memo(
 
             return (
                 <img
-                    src={`${browserEnv("VITE_CONVEX_API_URL")}/r2?key=${part.data}`}
+                    src={`${browserEnv("VITE_CONVEX_API_URL")}/r2?key=${part.file.data}`}
                     alt={fileName}
                     className="w-full max-w-2xl cursor-pointer rounded-lg object-contain transition-opacity hover:opacity-90"
                     onClick={handleInteraction}
@@ -146,9 +149,9 @@ const PartsRenderer = memo(
                     </div>
                 )
             case "reasoning": {
-                const hasReasoningContent = part.reasoning && part.reasoning.trim() !== ""
+                const hasReasoningContent = part.reasoningText && part.reasoningText.trim() !== ""
                 const isReasoningStreaming =
-                    isStreaming && (!hasReasoningContent || part.reasoning.endsWith(""))
+                    isStreaming && (!hasReasoningContent || part.reasoningText.endsWith(""))
 
                 return (
                     <Reasoning className="mb-6" isStreaming={isReasoningStreaming}>
@@ -158,7 +161,7 @@ const PartsRenderer = memo(
                             className="rounded-lg border bg-muted/50"
                             contentClassName="prose prose-p:my-0 prose-pre:my-2 prose-ul:my-2 prose-li:mt-1 prose-li:mb-0 max-w-none prose-pre:bg-transparent p-4 prose-pre:p-0 font-claude-message prose-headings:font-semibold prose-strong:font-medium prose-pre:text-foreground leading-[1.65rem] [&>div>div>:is(p,blockquote,h1,h2,h3,h4,h5,h6)]:pl-2 [&>div>div>:is(p,blockquote,ul,ol,h1,h2,h3,h4,h5,h6)]:pr-8 [&_.ignore-pre-bg>div]:bg-transparent [&_pre>div]:border-0.5 [&_pre>div]:border-border [&_pre>div]:bg-background"
                         >
-                            {hasReasoningContent ? part.reasoning : ""}
+                            {hasReasoningContent ? part.reasoningText : ""}
                         </ReasoningContent>
                     </Reasoning>
                 )
@@ -172,7 +175,9 @@ const PartsRenderer = memo(
 
                 return <GenericToolRenderer toolInvocation={part.toolInvocation} />
             case "file":
-                return <FileAttachment part={part} onPreview={() => onFilePreview?.(part)} />
+                return (
+                    <FileAttachment file={part.file} onPreview={() => onFilePreview?.(part.file)} />
+                )
         }
     }
 )
@@ -334,7 +339,8 @@ export function Messages({
             lastMessage.parts.every(
                 (part) =>
                     (part.type === "text" && (!part.text || part.text.trim() === "")) ||
-                    (part.type === "reasoning" && (!part.reasoning || part.reasoning.trim() === ""))
+                    (part.type === "reasoning" &&
+                        (!part.reasoningText || part.reasoningText.trim() === ""))
             ))
 
     const showTypingLoader = status === "submitted" || isStreamingWithoutContent

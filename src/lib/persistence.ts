@@ -1,5 +1,5 @@
 import { ABILITIES } from "@/convex/lib/toolkit"
-import { z } from "zod"
+import { z } from 'zod/v3';
 
 const AIConfigSchema = z.object({
     selectedModel: z.string().nullable(),

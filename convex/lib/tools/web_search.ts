@@ -1,5 +1,5 @@
 import { tool } from "ai"
-import { z } from "zod"
+import { z } from 'zod/v3';
 import { internal } from "../../_generated/api"
 import type { ToolAdapter } from "../toolkit"
 import { SearchProvider } from "./adapters"
@@ -29,7 +29,7 @@ export const WebSearchAdapter: ToolAdapter = async (params) => {
         web_search: tool({
             description:
                 "Search the web for information. Optionally scrape content from results for detailed information.",
-            parameters: z.object({
+            inputSchema: z.object({
                 query: z.string().describe("The search query"),
                 scrapeContent: z
                     .boolean()
@@ -78,5 +78,5 @@ export const WebSearchAdapter: ToolAdapter = async (params) => {
                 }
             }
         })
-    }
+    };
 }

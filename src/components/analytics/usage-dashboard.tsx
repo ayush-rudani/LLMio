@@ -79,16 +79,16 @@ export function UsageDashboard({ className }: UsageDashboardProps) {
 
         return chartData.map((day) => ({
             date: day.date,
-            prompt: Object.values(day.models).reduce((sum, model) => sum + model.promptTokens, 0),
+            prompt: Object.values(day.models).reduce((sum, model) => sum + model.inputTokens, 0),
             completion: Object.values(day.models).reduce(
-                (sum, model) => sum + model.completionTokens,
+                (sum, model) => sum + model.outputTokens,
                 0
             ),
-            reasoning: Object.values(day.models).reduce(
+            reasoningText: Object.values(day.models).reduce(
                 (sum, model) => sum + model.reasoningTokens,
                 0
             )
-        }))
+        }));
     }, [chartData])
 
     // Get unique models for chart config
@@ -116,7 +116,7 @@ export function UsageDashboard({ className }: UsageDashboardProps) {
         completion: {
             label: "Output Tokens"
         },
-        reasoning: {
+        reasoningText: {
             label: "Reasoning Tokens"
         }
     } satisfies ChartConfig
@@ -136,7 +136,6 @@ export function UsageDashboard({ className }: UsageDashboardProps) {
                     </TabsList>
                 </Tabs>
             </div>
-
             {/* Key Metrics Cards - Compact */}
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <Card className="gap-3 p-4">
@@ -207,7 +206,6 @@ export function UsageDashboard({ className }: UsageDashboardProps) {
                     </CardContent>
                 </Card>
             </div>
-
             {/* Charts */}
             <div className="grid gap-4">
                 {/* Stacked Model Usage Chart */}
@@ -366,7 +364,6 @@ export function UsageDashboard({ className }: UsageDashboardProps) {
                     </CardContent>
                 </Card>
             </div>
-
             {/* Model Details - Non-chart breakdown */}
             <Card className="gap-3 p-4">
                 <CardHeader className="gap-0 px-0">
@@ -403,8 +400,8 @@ export function UsageDashboard({ className }: UsageDashboardProps) {
                                         {(model.totalTokens / 1000).toFixed(1)}K tokens
                                     </div>
                                     <div className="text-muted-foreground text-xs">
-                                        {(model.promptTokens / 1000).toFixed(0)}K in •{" "}
-                                        {(model.completionTokens / 1000).toFixed(0)}K out
+                                        {(model.inputTokens / 1000).toFixed(0)}K in •{" "}
+                                        {(model.outputTokens / 1000).toFixed(0)}K out
                                         {model.reasoningTokens > 0 &&
                                             ` • ${(model.reasoningTokens / 1000).toFixed(0)}K reasoning`}
                                     </div>
@@ -420,5 +417,5 @@ export function UsageDashboard({ className }: UsageDashboardProps) {
                 </CardContent>
             </Card>
         </div>
-    )
+    );
 }

@@ -3,8 +3,8 @@ import type {
     ReasoningUIPart,
     TextUIPart,
     ToolInvocationUIPart
-} from "@ai-sdk/ui-utils"
-import { formatDataStreamPart } from "ai"
+} from 'ai'
+import { formatDataStreamPart, stepCountIs } from "ai";
 import { nanoid } from "nanoid"
 
 import { ChatError } from "@/lib/errors"
@@ -12,7 +12,7 @@ import type { ReasoningEffort } from "@/lib/model-store"
 import type { AnthropicProviderOptions } from "@ai-sdk/anthropic"
 import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google"
 import type { OpenAIResponsesProviderOptions } from "@ai-sdk/openai"
-import { createDataStream, smoothStream, streamText } from "ai"
+import { createUIMessageStream, smoothStream, streamText } from "ai"
 import type { Infer } from "convex/values"
 import { internal } from "../_generated/api"
 import type { Id } from "../_generated/dataModel"
@@ -164,12 +164,12 @@ export const chatPOST = httpAction(async (ctx, req) => {
 
     // Track token usage
     const totalTokenUsage = {
-        promptTokens: 0,
-        completionTokens: 0,
+        inputTokens: 0,
+        outputTokens: 0,
         reasoningTokens: 0
     }
 
-    const stream = createDataStream({
+    const stream = createUIMessageStream({
         execute: async (dataStream) => {
             await ctx.runMutation(internal.threads.updateThreadStreamingState, {
                 threadId: mutationResult.threadId,
@@ -189,19 +189,31 @@ export const chatPOST = httpAction(async (ctx, req) => {
                 )
             }
 
-            dataStream.writeData({
-                type: "thread_id",
-                content: mutationResult.threadId
+            dataStream.write({
+                'type': 'data',
+
+                'value': [{
+                    type: "thread_id",
+                    content: mutationResult.threadId
+                }]
             })
 
-            dataStream.writeData({
-                type: "stream_id",
-                content: streamId
+            dataStream.write({
+                'type': 'data',
+
+                'value': [{
+                    type: "stream_id",
+                    content: streamId
+                }]
             })
 
-            dataStream.writeMessageAnnotation({
-                type: "model_name",
-                content: modelName
+            dataStream.write({
+                'type': 'message-annotations',
+
+                'value': [{
+                    type: "model_name",
+                    content: modelName
+                }]
             })
 
             if (model.modelType === "image") {
@@ -287,14 +299,18 @@ export const chatPOST = httpAction(async (ctx, req) => {
 
                         // Send tool result
                         dataStream.write(
-                            formatDataStreamPart("tool_result", {
-                                toolCallId: mockToolCall.toolInvocation.toolCallId,
-                                result: {
-                                    assets: result.assets,
-                                    prompt: result.prompt,
-                                    modelId: result.modelId
+                            {
+                                'type': 'tool-result',
+
+                                'value': {
+                                    toolCallId: mockToolCall.toolInvocation.toolCallId,
+                                    result: {
+                                        assets: result.assets,
+                                        prompt: result.prompt,
+                                        modelId: result.modelId
+                                    }
                                 }
-                            })
+                            }
                         )
 
                         // Update parts with successful result
@@ -319,12 +335,16 @@ export const chatPOST = httpAction(async (ctx, req) => {
                         const errorMessage =
                             error instanceof Error ? error.message : "Unknown error occurred"
                         dataStream.write(
-                            formatDataStreamPart("tool_result", {
-                                toolCallId: mockToolCall.toolInvocation.toolCallId,
-                                result: {
-                                    error: errorMessage
+                            {
+                                'type': 'tool-result',
+
+                                'value': {
+                                    toolCallId: mockToolCall.toolInvocation.toolCallId,
+                                    result: {
+                                        error: errorMessage
+                                    }
                                 }
-                            })
+                            }
                         )
 
                         // Update parts with error
@@ -354,14 +374,16 @@ export const chatPOST = httpAction(async (ctx, req) => {
                 }
                 const result = streamText({
                     model: model,
-                    maxSteps: 100,
+                    stopWhen: stepCountIs(100),
                     abortSignal: remoteCancel.signal,
                     experimental_transform: smoothStream(),
                     toolCallStreaming: true,
                     temperature: 0.5,
+
                     tools: modelData.abilities.includes("function_calling")
                         ? await getToolkit(ctx, body.enabledTools, filteredSettings)
                         : undefined,
+
                     messages: [
                         ...(modelData.modelId !== "gemini-2.0-flash-image-generation"
                             ? [
@@ -373,6 +395,7 @@ export const chatPOST = httpAction(async (ctx, req) => {
                             : []),
                         ...mapped_messages
                     ],
+
                     providerOptions: {
                         google: buildGoogleProviderOptions(modelData.modelId, body.reasoningEffort),
                         openai: buildOpenAIProviderOptions(modelData.modelId, body.reasoningEffort),
@@ -423,8 +446,8 @@ export const chatPOST = httpAction(async (ctx, req) => {
                 metadata: {
                     modelId: body.model,
                     modelName,
-                    promptTokens: totalTokenUsage.promptTokens,
-                    completionTokens: totalTokenUsage.completionTokens,
+                    inputTokens: totalTokenUsage.inputTokens,
+                    outputTokens: totalTokenUsage.outputTokens,
                     reasoningTokens: totalTokenUsage.reasoningTokens,
                     serverDurationMs: Date.now() - streamStartTime
                 }

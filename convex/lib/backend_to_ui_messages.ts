@@ -1,10 +1,10 @@
-import type { Message as AIUIMessage } from "ai"
+import type { UIMessage as AIUIMessage } from "ai"
 import type { Infer } from "convex/values"
 import type { Message } from "../schema"
 import type { AIMessage } from "../schema/message"
 
-type AIUIMessageWithParts = Omit<AIUIMessage, "parts"> & {
-    parts: NonNullable<AIUIMessage["parts"]>
+type AIUIMessageWithParts = Omit<undefined, "parts"> & {
+    parts: NonNullable<undefined["parts"]>
     metadata?: Infer<typeof AIMessage>["metadata"]
 }
 
@@ -20,7 +20,7 @@ export const backendToUiMessages = (messages: Infer<typeof Message>[]): AIUIMess
             role: message.role,
             createdAt: new Date(message.createdAt),
             content: message.parts?.find((p) => p.type === "text")?.text || "",
-            parts: (message.parts as unknown as NonNullable<AIUIMessage["parts"]>) ?? []
+            parts: (message.parts as unknown as NonNullable<undefined["parts"]>) ?? []
         }
         return uiMessage
     })

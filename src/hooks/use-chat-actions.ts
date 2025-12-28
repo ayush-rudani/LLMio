@@ -1,6 +1,6 @@
 import type { Id } from "@/convex/_generated/dataModel"
 import { type UploadedFile, useChatStore } from "@/lib/chat-store"
-import type { FileUIPart } from "@ai-sdk/ui-utils"
+import type { FileUIPart } from 'ai'
 import type { UIMessage } from "ai"
 import { nanoid } from "nanoid"
 import { useCallback } from "react"
@@ -50,9 +50,12 @@ export function useChatActions({
                     ...finalFiles.map((file) => {
                         return {
                             type: "file",
-                            data: file.key,
-                            mimeType: file.fileType
-                        } satisfies FileUIPart
+
+                            file: {
+                                data: file.key,
+                                mediaType: file.fileType
+                            }
+                        } satisfies FileUIPart;
                     }),
                     { type: "text", text: inputValue }
                 ],
