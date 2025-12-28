@@ -18,13 +18,13 @@
     "author": "intern3chat",
     "license": "MIT",
     "dependencies": {
-        "@ai-sdk/anthropic": "^1.2.12",
-        "@ai-sdk/fal": "^0.1.12",
-        "@ai-sdk/google": "^1.2.22",
-        "@ai-sdk/groq": "^1.2.9",
-        "@ai-sdk/openai": "^1.3.24",
-        "@ai-sdk/provider": "^1.1.3",
-        "@ai-sdk/react": "^1.2.12",
+        "@ai-sdk/anthropic": "^3.0.0",
+        "@ai-sdk/fal": "^2.0.0",
+        "@ai-sdk/google": "^3.0.0",
+        "@ai-sdk/groq": "^3.0.0",
+        "@ai-sdk/openai": "^3.0.0",
+        "@ai-sdk/provider": "^3.0.0",
+        "@ai-sdk/react": "^3.0.0",
         "@ai-sdk/ui-utils": "^1.2.11",
         "@aws-sdk/client-ses": "^3.830.0",
         "@codesandbox/sandpack-react": "^2.20.0",
@@ -36,7 +36,7 @@
         "@daveyplate/better-auth-ui": "^1.5.2",
         "@hookform/resolvers": "^4.1.3",
         "@modelcontextprotocol/sdk": "^1.12.3",
-        "@openrouter/ai-sdk-provider": "^0.7.5",
+        "@openrouter/ai-sdk-provider": "^1.5.4",
         "@radix-ui/react-accordion": "^1.2.12",
         "@radix-ui/react-alert-dialog": "^1.1.15",
         "@radix-ui/react-aspect-ratio": "^1.1.8",
@@ -77,7 +77,8 @@
         "@upstash/redis": "^1.35.0",
         "@vercel/analytics": "^1.6.1",
         "@zanreal/search": "^1.0.0",
-        "ai": "^4.3.19",
+        "ai": "^5.0.0",
+        "ai-legacy": "npm:ai@^4.3.19",
         "babel-plugin-react-compiler": "^19.1.0-rc.2",
         "better-auth": "^1.4.7",
         "class-variance-authority": "^0.7.1",
@@ -131,7 +132,7 @@
         "use-stick-to-bottom": "^1.1.1",
         "vaul": "^1.1.2",
         "vite": "^6.4.1",
-        "zod": "^3.25.76",
+        "zod": "^4.1.8",
         "zustand": "^5.0.9"
     },
     "devDependencies": {
@@ -155,7 +156,10 @@
     },
     "packageManager": "pnpm@10.6.4",
     "pnpm": {
-        "onlyBuiltDependencies": ["@parcel/watcher", "esbuild", "sharp"]
+        "onlyBuiltDependencies": ["@parcel/watcher", "esbuild", "sharp"],
+        "overrides": {
+            "@convex-dev/r2>convex": "^1.31.2"
+        }
     },
     "lint-staged": {
         "*.{js,jsx,ts,tsx,json}": [
