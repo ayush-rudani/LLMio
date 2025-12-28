@@ -7,6 +7,7 @@ import { authClient } from "@/lib/auth-client"
 import { getChatWidthClass, useChatWidthStore } from "@/lib/chat-width-store"
 import { cn } from "@/lib/utils"
 import { useRouter } from "@tanstack/react-router"
+import type { UIMessage } from "ai"
 import { useMutation } from "convex/react"
 import { ArrowRight, GitFork } from "lucide-react"
 import { useStickToBottom } from "use-stick-to-bottom"
@@ -62,7 +63,7 @@ export function SharedChat({ sharedThreadId }: SharedChatProps) {
     return (
         <div className="relative flex h-screen flex-col">
             <Messages
-                messages={messages}
+                messages={messages as UIMessage[]}
                 status="ready"
                 contentRef={contentRef}
                 scrollRef={scrollRef}

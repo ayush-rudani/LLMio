@@ -27,33 +27,26 @@ export const ChatActions = memo(
                 const casted = message.metadata as { modelName?: string }
                 if (casted.modelName) return casted.modelName
             }
-            const found = message.annotations?.find(
-                (annotation) =>
-                    annotation &&
-                    typeof annotation === "object" &&
-                    "type" in annotation &&
-                    annotation.type === "model_name"
-            )
-            if (found && typeof found === "object" && "content" in found) {
-                return found.content?.toString()
-            }
             return undefined
-        }, [
-            message.annotations?.length,
-            (message as { metadata?: { modelName?: string } }).metadata
-        ])
+        }, [(message as { metadata?: { modelName?: string } }).metadata])
 
         const imageGenerationAssets = useMemo(() => {
             const assets: string[] = []
             message.parts
-                .filter((part) => part.type === "tool-invocation")
+                .filter((part) => part.type.startsWith("tool-"))
                 .forEach((part) => {
+                    // In v6, tool parts have type "tool-{toolName}" and properties directly on the part
+                    const toolPart = part as {
+                        type: string
+                        state: string
+                        output?: { assets?: Array<{ imageUrl?: string }> }
+                    }
                     if (
-                        part.toolInvocation.toolName === "image_generation" &&
-                        part.toolInvocation.state === "result" &&
-                        part.toolInvocation.result?.assets
+                        toolPart.type === "tool-image_generation" &&
+                        toolPart.state === "result" &&
+                        toolPart.output?.assets
                     ) {
-                        part.toolInvocation.result.assets.forEach((asset: any) => {
+                        toolPart.output.assets.forEach((asset) => {
                             if (asset.imageUrl) {
                                 assets.push(asset.imageUrl)
                             }

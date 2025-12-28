@@ -1,8 +1,7 @@
 import type { Id } from "@/convex/_generated/dataModel"
 import { type UploadedFile, useChatStore } from "@/lib/chat-store"
-import type { FileUIPart } from "@ai-sdk/ui-utils"
+import type { FileUIPart } from "ai"
 import type { UIMessage } from "ai"
-import { nanoid } from "nanoid"
 import { useCallback } from "react"
 import { useChatIntegration } from "./use-chat-integration"
 
@@ -15,7 +14,7 @@ export function useChatActions({
 }) {
     const { uploadedFiles, setUploadedFiles, setTargetFromMessageId, setTargetMode } =
         useChatStore()
-    const { status, append, stop, messages, setMessages, reload } = useChatIntegration({
+    const { status, sendMessage, stop, messages, setMessages, regenerate } = useChatIntegration({
         threadId,
         folderId
     })
@@ -42,26 +41,22 @@ export function useChatActions({
                 return
             }
 
-            append({
-                id: nanoid(),
-                role: "user",
-                content: inputValue,
-                parts: [
-                    ...finalFiles.map((file) => {
-                        return {
-                            type: "file",
-                            data: file.key,
-                            mimeType: file.fileType
-                        } satisfies FileUIPart
-                    }),
-                    { type: "text", text: inputValue }
-                ],
-                createdAt: new Date()
+            // Convert uploaded files to v6 FileUIPart format
+            const fileParts: FileUIPart[] = finalFiles.map((file) => ({
+                type: "file",
+                url: file.key,
+                mediaType: file.fileType
+            }))
+
+            // Use v6 sendMessage API with text + files
+            sendMessage({
+                text: inputValue,
+                files: fileParts.length > 0 ? fileParts : undefined
             })
 
             setUploadedFiles([])
         },
-        [append, stop, status, uploadedFiles, setUploadedFiles]
+        [sendMessage, stop, status, uploadedFiles, setUploadedFiles]
     )
 
     const handleRetry = useCallback(
@@ -79,14 +74,16 @@ export function useChatActions({
             setMessages(messagesUpToRetry)
             setTargetFromMessageId(undefined)
             setTargetMode("normal")
-            reload({
+            // Use v6 regenerate API
+            regenerate({
+                messageId: message.id,
                 body: {
                     targetMode: "retry",
                     targetFromMessageId: message.id
                 }
             })
         },
-        [messages, setMessages, reload]
+        [messages, setMessages, regenerate, setTargetFromMessageId, setTargetMode]
     )
 
     const handleEditAndRetry = useCallback(
@@ -110,14 +107,16 @@ export function useChatActions({
             setMessages([...messagesUpToEdit, updatedEditedMessage])
             setTargetFromMessageId(undefined)
             setTargetMode("normal")
-            reload({
+            // Use v6 regenerate API
+            regenerate({
+                messageId,
                 body: {
                     targetMode: "edit",
                     targetFromMessageId: messageId
                 }
             })
         },
-        [messages, setMessages, setTargetFromMessageId, reload]
+        [messages, setMessages, setTargetFromMessageId, regenerate, setTargetMode]
     )
 
     return {

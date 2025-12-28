@@ -1,17 +1,35 @@
 import { cn } from "@/lib/utils"
-import type { ToolInvocation } from "ai"
 import { ChevronDown, Loader2, Wrench } from "lucide-react"
 import { memo, useEffect, useRef, useState } from "react"
 import { Codeblock } from "../codeblock"
 
+// Tool invocation type for AI SDK v6
+type ToolInvocationType = {
+    toolCallId: string
+    toolName: string
+    state:
+        | "partial-call"
+        | "call"
+        | "result"
+        | "input-streaming"
+        | "input-available"
+        | "output-streaming"
+        | "output-available"
+        | "error"
+    args?: unknown
+    input?: unknown
+    result?: unknown
+    output?: unknown
+}
+
 export const GenericToolRenderer = memo(
-    ({ toolInvocation }: { toolInvocation: ToolInvocation }) => {
+    ({ toolInvocation }: { toolInvocation: ToolInvocationType }) => {
         const [isExpanded, setIsExpanded] = useState(false)
         const contentRef = useRef<HTMLDivElement>(null)
         const innerRef = useRef<HTMLDivElement>(null)
 
         const isLoading = toolInvocation.state === "partial-call" || toolInvocation.state === "call"
-        const hasResults = toolInvocation.state === "result" && toolInvocation.result
+        const hasResults = toolInvocation.state === "result" && !!toolInvocation.result
 
         useEffect(() => {
             if (!contentRef.current || !innerRef.current) return
@@ -86,7 +104,7 @@ export const GenericToolRenderer = memo(
                                     </Codeblock>
                                 </div>
 
-                                {toolInvocation.result && (
+                                {!!toolInvocation.result && (
                                     <>
                                         <span className="font-medium text-foreground text-sm">
                                             Result

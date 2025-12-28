@@ -1,7 +1,27 @@
 import { cn } from "@/lib/utils"
-import type { ToolInvocation } from "ai"
 import { ChevronDown, ExternalLink, Globe, Loader2 } from "lucide-react"
 import { memo, useEffect, useRef, useState } from "react"
+
+// Tool invocation type for AI SDK v6
+type ToolInvocationType = {
+    toolCallId: string
+    toolName: string
+    state:
+        | "partial-call"
+        | "call"
+        | "result"
+        | "input-streaming"
+        | "input-available"
+        | "output-streaming"
+        | "output-available"
+        | "error"
+    args?: { query?: string }
+    input?: unknown
+    result?: {
+        results?: Array<{ title?: string; description?: string; snippet?: string; url?: string }>
+    }
+    output?: unknown
+}
 
 function getFaviconUrl(url: string): string {
     try {
@@ -46,7 +66,7 @@ const FaviconWithLoader = memo(({ url }: { url: string }) => {
 })
 
 export const WebSearchToolRenderer = memo(
-    ({ toolInvocation }: { toolInvocation: ToolInvocation }) => {
+    ({ toolInvocation }: { toolInvocation: ToolInvocationType }) => {
         const [isExpanded, setIsExpanded] = useState(false)
         const contentRef = useRef<HTMLDivElement>(null)
         const innerRef = useRef<HTMLDivElement>(null)
@@ -54,7 +74,8 @@ export const WebSearchToolRenderer = memo(
         if (toolInvocation.toolName !== "web_search") return null
 
         const isLoading = toolInvocation.state === "partial-call" || toolInvocation.state === "call"
-        const hasResults = toolInvocation.state === "result" && toolInvocation.result
+        const hasResults = toolInvocation.state === "result" && !!toolInvocation.result
+        const resultCount = toolInvocation.result?.results?.length ?? 0
 
         useEffect(() => {
             if (!contentRef.current || !innerRef.current) return
@@ -119,9 +140,7 @@ export const WebSearchToolRenderer = memo(
                                     <span className="text-muted-foreground text-sm">
                                         <div className="flex items-center gap-2">
                                             <div className="size-1 rounded-full bg-primary" />
-                                            <span className="truncate">
-                                                {toolInvocation.result.results.length} results
-                                            </span>
+                                            <span className="truncate">{resultCount} results</span>
                                         </div>
                                     </span>
                                 )}

@@ -1,4 +1,4 @@
-import type { ImageModelV1 } from "@ai-sdk/provider"
+import type { ImageModelV2 } from "@ai-sdk/provider"
 import { experimental_generateImage } from "ai"
 import type { GenericActionCtx } from "convex/server"
 import type { DataModel, Id } from "../_generated/dataModel"
@@ -26,7 +26,7 @@ export async function generateAndStoreImage({
 }: {
     prompt: string
     imageSize: ImageSize
-    imageModel: ImageModelV1
+    imageModel: ImageModelV2
     modelId: string
     userId: string
     threadId: Id<"threads">
@@ -83,13 +83,19 @@ export async function generateAndStoreImage({
         const assets: ImageGenerationResult["assets"] = []
 
         for (const image of images) {
-            const fileExtension = image.mimeType.split("/")[1] || "png"
+            // image might not have mimeType property, default to "image/png"
+            let mimeType = "image/png"
+            let fileExtension = "png"
+            if ("mimeType" in image && typeof image.mimeType === "string") {
+                mimeType = image.mimeType
+                fileExtension = mimeType.split("/")[1] || "png"
+            }
             const key = `generations/${userId}/${Date.now()}-${crypto.randomUUID()}-gen.${fileExtension}`
 
             const storedKey = await r2.store(actionCtx, image.uint8Array, {
                 authorId: userId,
                 key,
-                type: image.mimeType
+                type: mimeType
             })
 
             console.log("[cvx][image_generation] Image stored to R2:", storedKey)
@@ -97,7 +103,7 @@ export async function generateAndStoreImage({
             assets.push({
                 imageUrl: key,
                 imageSize: requestedImageSize,
-                mimeType: image.mimeType
+                mimeType: mimeType
             })
         }
 

@@ -146,9 +146,9 @@ const PartsRenderer = memo(
                     </div>
                 )
             case "reasoning": {
-                const hasReasoningContent = part.reasoning && part.reasoning.trim() !== ""
+                const hasReasoningContent = part.text && part.text.trim() !== ""
                 const isReasoningStreaming =
-                    isStreaming && (!hasReasoningContent || part.reasoning.endsWith(""))
+                    isStreaming && (!hasReasoningContent || part.text.endsWith(""))
 
                 return (
                     <Reasoning className="mb-6" isStreaming={isReasoningStreaming}>
@@ -158,21 +158,54 @@ const PartsRenderer = memo(
                             className="rounded-lg border bg-muted/50"
                             contentClassName="prose prose-p:my-0 prose-pre:my-2 prose-ul:my-2 prose-li:mt-1 prose-li:mb-0 max-w-none prose-pre:bg-transparent p-4 prose-pre:p-0 font-claude-message prose-headings:font-semibold prose-strong:font-medium prose-pre:text-foreground leading-[1.65rem] [&>div>div>:is(p,blockquote,h1,h2,h3,h4,h5,h6)]:pl-2 [&>div>div>:is(p,blockquote,ul,ol,h1,h2,h3,h4,h5,h6)]:pr-8 [&_.ignore-pre-bg>div]:bg-transparent [&_pre>div]:border-0.5 [&_pre>div]:border-border [&_pre>div]:bg-background"
                         >
-                            {hasReasoningContent ? part.reasoning : ""}
+                            {hasReasoningContent ? part.text : ""}
                         </ReasoningContent>
                     </Reasoning>
                 )
             }
-            case "tool-invocation":
-                if (part.toolInvocation.toolName === "web_search")
-                    return <WebSearchToolRenderer toolInvocation={part.toolInvocation} />
+            case "file": {
+                // In v6, FileUIPart uses 'url' instead of 'data'
+                const fileUrl = "url" in part ? (part.url as string) : ""
+                const filePart = {
+                    data: fileUrl,
+                    filename:
+                        "filename" in part ? (part.filename as string | undefined) : undefined,
+                    mimeType:
+                        "mediaType" in part ? (part.mediaType as string | undefined) : undefined
+                }
+                return (
+                    <FileAttachment part={filePart} onPreview={() => onFilePreview?.(filePart)} />
+                )
+            }
+            default:
+                // Handle tool parts - in v6 they have type like "tool-{toolName}"
+                if (part.type.startsWith("tool-")) {
+                    const toolName = part.type.slice(5) // Remove "tool-" prefix
+                    const toolPart = part as {
+                        type: string
+                        toolCallId: string
+                        state: string
+                        input?: unknown
+                        output?: unknown
+                    }
+                    const toolInvocation = {
+                        toolCallId: toolPart.toolCallId,
+                        toolName,
+                        state: toolPart.state,
+                        args: toolPart.input,
+                        result: toolPart.output
+                    }
+                    if (toolName === "web_search")
+                        return <WebSearchToolRenderer toolInvocation={toolInvocation as any} />
 
-                if (part.toolInvocation.toolName === "image_generation")
-                    return <ImageGenerationToolRenderer toolInvocation={part.toolInvocation} />
+                    if (toolName === "image_generation")
+                        return (
+                            <ImageGenerationToolRenderer toolInvocation={toolInvocation as any} />
+                        )
 
-                return <GenericToolRenderer toolInvocation={part.toolInvocation} />
-            case "file":
-                return <FileAttachment part={part} onPreview={() => onFilePreview?.(part)} />
+                    return <GenericToolRenderer toolInvocation={toolInvocation as any} />
+                }
+                return null
         }
     }
 )
@@ -334,7 +367,7 @@ export function Messages({
             lastMessage.parts.every(
                 (part) =>
                     (part.type === "text" && (!part.text || part.text.trim() === "")) ||
-                    (part.type === "reasoning" && (!part.reasoning || part.reasoning.trim() === ""))
+                    (part.type === "reasoning" && (!part.text || part.text.trim() === ""))
             ))
 
     const showTypingLoader = status === "submitted" || isStreamingWithoutContent

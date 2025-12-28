@@ -4,34 +4,45 @@ import { z } from "zod"
 import { internal } from "../../_generated/api"
 import type { ToolAdapter } from "../toolkit"
 
+// Define the parameter schemas
+const addMemoryInputSchema = z.object({
+    content: z.string().describe("The content to store in memory"),
+    metadata: z
+        .object({
+            title: z.union([z.string().describe("A title for this memory. Optional."), z.null()]),
+            category: z.union([
+                z.string().describe("Category to organize this memory. Optional."),
+                z.null()
+            ]),
+            tags: z.union([
+                z.array(z.string()).describe("Tags to help find this memory later. Optional."),
+                z.null()
+            ])
+        })
+        .describe("Optional metadata to organize the memory")
+})
+
+const searchMemoriesInputSchema = z.object({
+    query: z.string().describe("The search query to find relevant memories"),
+    limit: z
+        .number()
+        .min(1)
+        .max(10)
+        .default(5)
+        .describe("Maximum number of memories to return. Default is 5."),
+    category: z.union([z.string().describe("Filter by specific category. Optional."), z.null()]),
+    tags: z.union([z.array(z.string()).describe("Filter by specific tags. Optional."), z.null()])
+})
+
 export const SupermemoryAdapter: ToolAdapter = async ({ ctx, enabledTools, userSettings }) => {
     if (!enabledTools.includes("supermemory")) return {}
 
     return {
         add_memory: tool({
             description: "Add content to supermemory for future recall and reference",
-            parameters: z.object({
-                content: z.string().describe("The content to store in memory"),
-                metadata: z
-                    .object({
-                        title: z.union([
-                            z.string().describe("A title for this memory. Optional."),
-                            z.null()
-                        ]),
-                        category: z.union([
-                            z.string().describe("Category to organize this memory. Optional."),
-                            z.null()
-                        ]),
-                        tags: z.union([
-                            z
-                                .array(z.string())
-                                .describe("Tags to help find this memory later. Optional."),
-                            z.null()
-                        ])
-                    })
-                    .describe("Optional metadata to organize the memory")
-            }),
-            execute: async ({ content, metadata }) => {
+            inputSchema: addMemoryInputSchema,
+            execute: async (params) => {
+                const { content, metadata } = params
                 try {
                     const apiKey = await ctx.runQuery(internal.settings.getSupermemoryKey, {
                         userId: userSettings.userId
@@ -53,7 +64,7 @@ export const SupermemoryAdapter: ToolAdapter = async ({ ctx, enabledTools, userS
                         containerTags.push(`category:${metadata.category}`)
                     }
                     if (metadata?.tags) {
-                        containerTags.push(...metadata.tags.map((tag) => `tag:${tag}`))
+                        containerTags.push(...metadata.tags.map((tag: string) => `tag:${tag}`))
                     }
 
                     const response = await client.memories.add({
@@ -84,24 +95,9 @@ export const SupermemoryAdapter: ToolAdapter = async ({ ctx, enabledTools, userS
 
         search_memories: tool({
             description: "Search through stored memories to find relevant information",
-            parameters: z.object({
-                query: z.string().describe("The search query to find relevant memories"),
-                limit: z
-                    .number()
-                    .min(1)
-                    .max(10)
-                    .default(5)
-                    .describe("Maximum number of memories to return. Default is 5."),
-                category: z.union([
-                    z.string().describe("Filter by specific category. Optional."),
-                    z.null()
-                ]),
-                tags: z.union([
-                    z.array(z.string()).describe("Filter by specific tags. Optional."),
-                    z.null()
-                ])
-            }),
-            execute: async ({ query, limit = 5, category, tags }) => {
+            inputSchema: searchMemoriesInputSchema,
+            execute: async (params) => {
+                const { query, limit = 5, category, tags } = params
                 try {
                     const apiKey = await ctx.runQuery(internal.settings.getSupermemoryKey, {
                         userId: userSettings.userId
@@ -123,7 +119,7 @@ export const SupermemoryAdapter: ToolAdapter = async ({ ctx, enabledTools, userS
                         containerTags.push(`category:${category}`)
                     }
                     if (tags) {
-                        containerTags.push(...tags.map((tag) => `tag:${tag}`))
+                        containerTags.push(...tags.map((tag: string) => `tag:${tag}`))
                     }
 
                     const response = await client.search.execute({

@@ -4,7 +4,6 @@ import type { Id } from "@/convex/_generated/dataModel"
 import { MODELS_SHARED } from "@/convex/lib/models"
 import { useSession } from "@/hooks/auth-hooks"
 import { useChatActions } from "@/hooks/use-chat-actions"
-import { useChatDataProcessor } from "@/hooks/use-chat-data-processor"
 import { useChatIntegration } from "@/hooks/use-chat-integration"
 import { useDynamicTitle } from "@/hooks/use-dynamic-title"
 import { useThreadSync } from "@/hooks/use-thread-sync"
@@ -12,6 +11,7 @@ import type { UploadedFile } from "@/lib/chat-store"
 import { useDiskCachedQuery } from "@/lib/convex-cached-query"
 import { useModelStore } from "@/lib/model-store"
 import { useThemeStore } from "@/lib/theme-store"
+import type { UIMessage } from "ai"
 import { AnimatePresence, motion } from "motion/react"
 import { useEffect, useMemo } from "react"
 import { useStickToBottom } from "use-stick-to-bottom"
@@ -53,9 +53,11 @@ const ChatContent = ({ threadId: routeThreadId, folderId }: ChatProps) => {
         session?.user?.id ? {} : "skip"
     )
     const project =
-        "error" in projects ? null : projects?.find((project) => project._id === folderId)
+        projects && "error" in projects
+            ? null
+            : projects?.find((project) => project._id === folderId)
 
-    const { status, data, messages, ...chatHelpers } = useChatIntegration({
+    const { status, messages, ...chatHelpers } = useChatIntegration({
         threadId,
         folderId
     })
@@ -64,8 +66,6 @@ const ChatContent = ({ threadId: routeThreadId, folderId }: ChatProps) => {
         threadId,
         folderId
     })
-
-    useChatDataProcessor({ data, messages })
 
     const handleInputSubmitWithScroll = (inputValue?: string, fileValues?: UploadedFile[]) => {
         handleInputSubmit(inputValue, fileValues)
@@ -109,7 +109,7 @@ const ChatContent = ({ threadId: routeThreadId, folderId }: ChatProps) => {
     return (
         <div className="relative flex h-[calc(100dvh-64px)] flex-col">
             <Messages
-                messages={messages}
+                messages={messages as UIMessage[]}
                 onRetry={handleRetry}
                 onEditAndRetry={handleEditAndRetry}
                 status={status}

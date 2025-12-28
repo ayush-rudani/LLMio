@@ -4,6 +4,11 @@ import { internal } from "../../_generated/api"
 import type { ToolAdapter } from "../toolkit"
 import { SearchProvider } from "./adapters"
 
+const webSearchInputSchema = z.object({
+    query: z.string().describe("The search query"),
+    scrapeContent: z.boolean().describe("Whether to scrape and include content from search results")
+})
+
 export const WebSearchAdapter: ToolAdapter = async (params) => {
     if (!params.enabledTools.includes("web_search")) return {}
 
@@ -29,13 +34,9 @@ export const WebSearchAdapter: ToolAdapter = async (params) => {
         web_search: tool({
             description:
                 "Search the web for information. Optionally scrape content from results for detailed information.",
-            parameters: z.object({
-                query: z.string().describe("The search query"),
-                scrapeContent: z
-                    .boolean()
-                    .describe("Whether to scrape and include content from search results")
-            }),
-            execute: async ({ query, scrapeContent }) => {
+            inputSchema: webSearchInputSchema,
+            execute: async (params) => {
+                const { query, scrapeContent } = params
                 // Use the user's default setting if scrapeContent is not provided
                 const shouldScrapeContent =
                     scrapeContent ?? userSettings.searchIncludeSourcesByDefault

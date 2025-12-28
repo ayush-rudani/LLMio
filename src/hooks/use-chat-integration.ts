@@ -7,11 +7,15 @@ import { useAutoResume } from "@/hooks/use-auto-resume"
 import { browserEnv } from "@/lib/browser-env"
 import { useChatStore } from "@/lib/chat-store"
 import { useModelStore } from "@/lib/model-store"
-import { type Message, useChat } from "@ai-sdk/react"
+import { type UIMessage, useChat } from "@ai-sdk/react"
 import { useQuery as useConvexQuery } from "convex-helpers/react/cache"
 import type { Infer } from "convex/values"
 import { nanoid } from "nanoid"
-import { useCallback, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
+
+// Custom data types from our backend stream
+type ThreadIdData = { type: "thread_id"; content: string }
+type StreamIdData = { type: "stream_id"; content: string }
 
 export function useChatIntegration<IsShared extends boolean>({
     threadId,
@@ -71,18 +75,20 @@ export function useChatIntegration<IsShared extends boolean>({
         return backendToUiMessages(threadMessages)
     }, [threadMessages, sharedThread, isShared, sharedThreadId])
 
+    // Track the current threadId for onData callback
+    const currentThreadIdRef = useRef<string | undefined>(threadId)
+    useEffect(() => {
+        currentThreadIdRef.current = threadId
+    }, [threadId])
+
     const chatHelpers = useChat({
         id: isShared
             ? `shared_${sharedThreadId}`
             : threadId === undefined
               ? `new_chat_${rerenderTrigger}`
               : threadId,
-        headers: isShared
-            ? {}
-            : {
-                  authorization: `Bearer ${tokenData.token}`
-              },
         experimental_throttle: 50,
+        // @ts-expect-error -- Using experimental_prepareRequestBody even though not in type
         experimental_prepareRequestBody(body) {
             // Skip request preparation for shared threads since they're read-only
             if (isShared) return null
@@ -93,7 +99,7 @@ export function useChatIntegration<IsShared extends boolean>({
             const proposedNewAssistantId = nanoid()
             seededNextId.current = proposedNewAssistantId
 
-            const messages = body.messages as Message[]
+            const messages = body.messages as UIMessage[]
             const message = messages[messages.length - 1]
 
             // Get effective MCP overrides (includes defaults for new chats)
@@ -116,11 +122,43 @@ export function useChatIntegration<IsShared extends boolean>({
                 mcpOverrides
             }
         },
-        initialMessages,
+        // Cast to Message[] for compatibility - both types have the same runtime structure
+        initialMessages: initialMessages as UIMessage[],
         onFinish: () => {
             if (!isShared && shouldUpdateQuery) {
                 setShouldUpdateQuery(false)
                 triggerRerender()
+            }
+        },
+        // Handle custom data parts from backend stream (thread_id, stream_id)
+        onData: (dataPart) => {
+            const { setThreadId, setAttachedStreamId, setShouldUpdateQuery, setPendingStream } =
+                useChatStore.getState()
+
+            // Handle thread_id data part
+            if (dataPart.type === "data-thread_id") {
+                const data = dataPart.data as ThreadIdData
+                setThreadId(data.content)
+                if (typeof window !== "undefined") {
+                    window.history.replaceState({}, "", `/thread/${data.content}`)
+                }
+                setShouldUpdateQuery(true)
+                console.log("[UCI:onData:thread_id]", { t: data.content })
+            }
+
+            // Handle stream_id data part
+            if (dataPart.type === "data-stream_id") {
+                const data = dataPart.data as StreamIdData
+                const currentThreadId =
+                    currentThreadIdRef.current || useChatStore.getState().threadId
+                if (currentThreadId) {
+                    setAttachedStreamId(currentThreadId, data.content)
+                    setPendingStream(currentThreadId, false)
+                    console.log("[UCI:onData:stream_id]", {
+                        t: currentThreadId,
+                        sid: data.content.slice(0, 5)
+                    })
+                }
             }
         },
         api: isShared ? undefined : `${browserEnv("VITE_CONVEX_API_URL")}/chat`,
@@ -143,14 +181,14 @@ export function useChatIntegration<IsShared extends boolean>({
         })
 
         if (initialMessages.length > 0) {
-            chatHelpers.setMessages(initialMessages)
+            chatHelpers.setMessages(initialMessages as UIMessage[])
             console.log("[UCI:messages_restored]", { count: initialMessages.length })
         }
 
-        chatHelpers.experimental_resume()
+        chatHelpers.resumeStream()
     }, [
         chatHelpers.setMessages,
-        chatHelpers.experimental_resume,
+        chatHelpers.resumeStream,
         initialMessages,
         threadMessages,
         threadId,
