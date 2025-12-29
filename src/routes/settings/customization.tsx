@@ -63,7 +63,7 @@ function CustomizationSettings() {
         )
     }
 
-    if (!userSettings) {
+    if (!userSettings || "error" in userSettings) {
         return (
             <SettingsLayout
                 title="Customization"
