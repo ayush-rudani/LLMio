@@ -29,7 +29,7 @@ export const WebSearchAdapter: ToolAdapter = async (params) => {
         web_search: tool({
             description:
                 "Search the web for information. Optionally scrape content from results for detailed information.",
-            parameters: z.object({
+            inputSchema: z.object({
                 query: z.string().describe("The search query"),
                 scrapeContent: z
                     .boolean()

@@ -1,4 +1,4 @@
-import type { ImageModelV1 } from "@ai-sdk/provider"
+import type { ImageModel } from "ai"
 import { experimental_generateImage } from "ai"
 import type { GenericActionCtx } from "convex/server"
 import type { DataModel, Id } from "../_generated/dataModel"
@@ -26,7 +26,7 @@ export async function generateAndStoreImage({
 }: {
     prompt: string
     imageSize: ImageSize
-    imageModel: ImageModelV1
+    imageModel: ImageModel
     modelId: string
     userId: string
     threadId: Id<"threads">
@@ -69,10 +69,15 @@ export async function generateAndStoreImage({
     }
 
     try {
-        console.log(
-            `[cvx][image_generation] Generating image with model ${imageModel.provider}/${imageModel.modelId}`,
-            { imageSize, aspectRatio, size }
-        )
+        const modelInfo =
+            typeof imageModel === "string"
+                ? imageModel
+                : `${imageModel.provider}/${imageModel.modelId}`
+        console.log(`[cvx][image_generation] Generating image with model ${modelInfo}`, {
+            imageSize,
+            aspectRatio,
+            size
+        })
 
         const { images } = await experimental_generateImage({
             model: imageModel,
@@ -83,13 +88,13 @@ export async function generateAndStoreImage({
         const assets: ImageGenerationResult["assets"] = []
 
         for (const image of images) {
-            const fileExtension = image.mimeType.split("/")[1] || "png"
+            const fileExtension = image.mediaType.split("/")[1] || "png"
             const key = `generations/${userId}/${Date.now()}-${crypto.randomUUID()}-gen.${fileExtension}`
 
             const storedKey = await r2.store(actionCtx, image.uint8Array, {
                 authorId: userId,
                 key,
-                type: image.mimeType
+                type: image.mediaType
             })
 
             console.log("[cvx][image_generation] Image stored to R2:", storedKey)
@@ -97,7 +102,7 @@ export async function generateAndStoreImage({
             assets.push({
                 imageUrl: key,
                 imageSize: requestedImageSize,
-                mimeType: image.mimeType
+                mimeType: image.mediaType
             })
         }
 

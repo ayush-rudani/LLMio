@@ -62,7 +62,7 @@ const FolderChat = ({ folderId }: FolderChatProps) => {
     const project =
         "error" in projects ? null : projects?.find((project) => project._id === folderId)
 
-    const { status, data, messages } = useChatIntegration({
+    const { status, messages } = useChatIntegration({
         threadId,
         folderId
     })
@@ -72,7 +72,7 @@ const FolderChat = ({ folderId }: FolderChatProps) => {
         folderId
     })
 
-    useChatDataProcessor({ data, messages })
+    useChatDataProcessor({ messages })
 
     const handleInputSubmitWithScroll = (inputValue?: string, fileValues?: UploadedFile[]) => {
         handleInputSubmit(inputValue, fileValues)

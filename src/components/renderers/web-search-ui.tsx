@@ -1,7 +1,10 @@
 import { cn } from "@/lib/utils"
-import type { ToolInvocation } from "ai"
+import type { ToolUIPartV2 } from "convex/schema/parts"
+import type { Infer } from "convex/values"
 import { ChevronDown, ExternalLink, Globe, Loader2 } from "lucide-react"
 import { memo, useEffect, useRef, useState } from "react"
+
+type ToolInvocationType = Infer<typeof ToolUIPartV2>
 
 function getFaviconUrl(url: string): string {
     try {
@@ -46,15 +49,20 @@ const FaviconWithLoader = memo(({ url }: { url: string }) => {
 })
 
 export const WebSearchToolRenderer = memo(
-    ({ toolInvocation }: { toolInvocation: ToolInvocation }) => {
+    ({ toolInvocation }: { toolInvocation: ToolInvocationType }) => {
         const [isExpanded, setIsExpanded] = useState(false)
         const contentRef = useRef<HTMLDivElement>(null)
         const innerRef = useRef<HTMLDivElement>(null)
 
-        if (toolInvocation.toolName !== "web_search") return null
+        if (toolInvocation.type !== "tool-web_search") return null
 
-        const isLoading = toolInvocation.state === "partial-call" || toolInvocation.state === "call"
-        const hasResults = toolInvocation.state === "result" && toolInvocation.result
+        const isLoading =
+            toolInvocation.state === "input-streaming" || toolInvocation.state === "input-available"
+        const hasResults =
+            (toolInvocation.state === "output-available" ||
+                toolInvocation.state === "output-error") &&
+            "result" in toolInvocation &&
+            Boolean(toolInvocation.result)
 
         useEffect(() => {
             if (!contentRef.current || !innerRef.current) return
@@ -107,24 +115,29 @@ export const WebSearchToolRenderer = memo(
                     </div>
 
                     {/* Query and results info */}
-                    {(toolInvocation.args?.query || hasResults) && (
+                    {(toolInvocation.input || hasResults) && (
                         <div className="flex items-center gap-2 md:ml-auto">
                             <div className="flex items-center gap-2 rounded-md bg-muted/50 px-2 py-1 text-muted-foreground text-sm">
-                                {toolInvocation.args?.query && (
+                                {toolInvocation.input?.query && (
                                     <span className="max-w-32 truncate text-muted-foreground text-sm md:max-w-48">
-                                        "{toolInvocation.args.query}"
+                                        "{toolInvocation.input.query}"
                                     </span>
                                 )}
-                                {hasResults && (
-                                    <span className="text-muted-foreground text-sm">
-                                        <div className="flex items-center gap-2">
-                                            <div className="size-1 rounded-full bg-primary" />
-                                            <span className="truncate">
-                                                {toolInvocation.result.results.length} results
-                                            </span>
-                                        </div>
-                                    </span>
-                                )}
+                                {hasResults &&
+                                    typeof toolInvocation.result === "object" &&
+                                    toolInvocation.result !== null &&
+                                    "count" in toolInvocation.result && (
+                                        <span className="text-muted-foreground text-sm">
+                                            <div className="flex items-center gap-2">
+                                                <div className="size-1 rounded-full bg-primary" />
+                                                <span className="truncate">
+                                                    {(toolInvocation.result as { count?: number })
+                                                        .count ?? 0}{" "}
+                                                    results
+                                                </span>
+                                            </div>
+                                        </span>
+                                    )}
                             </div>
 
                             {/* Desktop chevron */}
@@ -156,8 +169,8 @@ export const WebSearchToolRenderer = memo(
                         {hasResults && (
                             <div className="relative w-full">
                                 <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border flex gap-4 overflow-x-auto p-4">
-                                    {toolInvocation.result?.results?.map(
-                                        (result: any, index: number) => (
+                                    {Array.isArray(toolInvocation.result) &&
+                                        toolInvocation.result.map((result: any, index: number) => (
                                             <button
                                                 key={index}
                                                 type="button"
@@ -232,8 +245,7 @@ export const WebSearchToolRenderer = memo(
                                                     )}
                                                 </div>
                                             </button>
-                                        )
-                                    )}
+                                        ))}
                                 </div>
                             </div>
                         )}

@@ -38,10 +38,10 @@ const FileAttachment = memo(
         part,
         onPreview
     }: {
-        part: { data: string; filename?: string; mimeType?: string }
+        part: { data: string; filename?: string; mediaType?: string }
         onPreview?: () => void
     }) => {
-        const { isImage } = getFileTypeInfo(extractFileName(part.data), part.mimeType)
+        const { isImage } = getFileTypeInfo(extractFileName(part.data), part.mediaType)
 
         const extractedFileName = extractFileName(part.data)
 
@@ -131,7 +131,7 @@ const PartsRenderer = memo(
         part: UIMessage["parts"][number]
         markdown: boolean
         id: string
-        onFilePreview?: (part: { data: string; filename?: string; mimeType?: string }) => void
+        onFilePreview?: (part: { data: string; filename?: string; mediaType?: string }) => void
         isStreaming?: boolean
     }) => {
         switch (part.type) {
@@ -146,9 +146,9 @@ const PartsRenderer = memo(
                     </div>
                 )
             case "reasoning": {
-                const hasReasoningContent = part.reasoning && part.reasoning.trim() !== ""
+                const hasReasoningContent = part.type === "reasoning" && part.text.trim() !== ""
                 const isReasoningStreaming =
-                    isStreaming && (!hasReasoningContent || part.reasoning.endsWith(""))
+                    isStreaming && (!hasReasoningContent || part.text.endsWith(""))
 
                 return (
                     <Reasoning className="mb-6" isStreaming={isReasoningStreaming}>
@@ -158,21 +158,37 @@ const PartsRenderer = memo(
                             className="rounded-lg border bg-muted/50"
                             contentClassName="prose prose-p:my-0 prose-pre:my-2 prose-ul:my-2 prose-li:mt-1 prose-li:mb-0 max-w-none prose-pre:bg-transparent p-4 prose-pre:p-0 font-claude-message prose-headings:font-semibold prose-strong:font-medium prose-pre:text-foreground leading-[1.65rem] [&>div>div>:is(p,blockquote,h1,h2,h3,h4,h5,h6)]:pl-2 [&>div>div>:is(p,blockquote,ul,ol,h1,h2,h3,h4,h5,h6)]:pr-8 [&_.ignore-pre-bg>div]:bg-transparent [&_pre>div]:border-0.5 [&_pre>div]:border-border [&_pre>div]:bg-background"
                         >
-                            {hasReasoningContent ? part.reasoning : ""}
+                            {hasReasoningContent ? part.text : ""}
                         </ReasoningContent>
                     </Reasoning>
                 )
             }
-            case "tool-invocation":
-                if (part.toolInvocation.toolName === "web_search")
-                    return <WebSearchToolRenderer toolInvocation={part.toolInvocation} />
+            case "dynamic-tool":
+                if (part.toolName === "web_search")
+                    return <WebSearchToolRenderer toolInvocation={part} />
 
-                if (part.toolInvocation.toolName === "image_generation")
-                    return <ImageGenerationToolRenderer toolInvocation={part.toolInvocation} />
+                if (part.toolName === "image_generation")
+                    return <ImageGenerationToolRenderer toolInvocation={part} />
 
-                return <GenericToolRenderer toolInvocation={part.toolInvocation} />
+                return <GenericToolRenderer toolInvocation={part} />
+
             case "file":
-                return <FileAttachment part={part} onPreview={() => onFilePreview?.(part)} />
+                return (
+                    <FileAttachment
+                        part={{
+                            data: part.url,
+                            filename: part.filename,
+                            mediaType: part.mediaType
+                        }}
+                        onPreview={() =>
+                            onFilePreview?.({
+                                data: part.url,
+                                filename: part.filename,
+                                mediaType: part.mediaType
+                            })
+                        }
+                    />
+                )
         }
     }
 )
@@ -334,7 +350,7 @@ export function Messages({
             lastMessage.parts.every(
                 (part) =>
                     (part.type === "text" && (!part.text || part.text.trim() === "")) ||
-                    (part.type === "reasoning" && (!part.reasoning || part.reasoning.trim() === ""))
+                    (part.type === "reasoning" && (!part.text || part.text.trim() === ""))
             ))
 
     const showTypingLoader = status === "submitted" || isStreamingWithoutContent

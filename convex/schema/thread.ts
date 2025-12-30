@@ -1,5 +1,5 @@
 import { v } from "convex/values"
-import { AIMessage } from "./message"
+import { AIMessageV2 } from "./message"
 
 export const Thread = v.object({
     authorId: v.string(),
@@ -19,6 +19,6 @@ export const SharedThread = v.object({
     title: v.string(),
     createdAt: v.number(),
     updatedAt: v.number(),
-    messages: v.array(AIMessage),
+    messages: v.array(AIMessageV2),
     includeAttachments: v.boolean()
 })
