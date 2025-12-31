@@ -46,7 +46,7 @@ export const backendToUiMessagesV2 = (
             metadata: message.metadata,
             id: message.messageId,
             role: message.role,
-            parts: (message.parts as unknown as NonNullable<AIUIMessage["parts"]>) ?? []
+            parts: message.parts as unknown as NonNullable<AIUIMessage["parts"]>
         }
         return uiMessage
     })

@@ -16,11 +16,12 @@ export const dbMessagesToCore = async (
     modelAbilities: ModelAbility[]
 ): Promise<CoreMessage[]> => {
     const mapped_messages: CoreMessage[] = []
+
     for await (const message of messages) {
         const to_commit_messages: CoreMessage[] = []
+
         if (message.role === "user") {
             const mapped_content: UserContent = []
-
             const failedFileFetch = (type: "image" | "text" | "pdf", filename: string) => {
                 mapped_content.push({
                     type: "text",
@@ -35,7 +36,6 @@ export const dbMessagesToCore = async (
                 if (p.type === "file" && "mediaType" in p && "data" in p) {
                     const _extract = p.mediaType ? (p.url.split("/").pop() ?? "") : ""
                     const extractedFileName = _extract.length > 51 ? _extract.slice(51) : _extract
-
                     const filename = p.filename || extractedFileName
                     const fileTypeInfo = getFileTypeInfo(filename, p.mediaType)
 
@@ -149,15 +149,37 @@ export const dbMessagesToCore = async (
                     mapped_content.push({ type: "text", text: p.text })
                 } else if (p.type === "file" && "mediaType" in p && "url" in p) {
                     if (p.mediaType?.startsWith("image/") && p.url.startsWith("generations/")) {
-                        const fileUrl = await r2.getUrl(p.url)
-                        const data = await fetch(fileUrl)
-                        const blob = await data.blob()
-                        mapped_content.push({
-                            type: "file",
-                            mediaType: p.mediaType || "image/png",
-                            filename: p.filename || "",
-                            data: await blob.arrayBuffer()
-                        })
+                        try {
+                            const fileUrl = await r2.getUrl(p.url)
+                            const data = await fetch(fileUrl)
+
+                            if (data.ok) {
+                                const blob = await data.blob()
+                                mapped_content.push({
+                                    type: "file",
+                                    mediaType: p.mediaType || "image/png",
+                                    filename: p.filename || "",
+                                    data: await blob.arrayBuffer()
+                                })
+                            } else {
+                                console.warn(
+                                    `[cvx][chat] Failed to fetch assistant image file ${p.url}: ${data.status} ${data.statusText}`
+                                )
+                                mapped_content.push({
+                                    type: "text",
+                                    text: `<internal-system-error>Failed to fetch generated image ${p.filename || p.url}. The file may have been deleted.</internal-system-error>`
+                                })
+                            }
+                        } catch (error) {
+                            console.warn(
+                                `[cvx][chat] Error processing assistant image file ${p.url}:`,
+                                error
+                            )
+                            mapped_content.push({
+                                type: "text",
+                                text: `<internal-system-error>Failed to fetch generated image ${p.filename || p.url}. The file may have been deleted.</internal-system-error>`
+                            })
+                        }
                     } else {
                         mapped_content.push({
                             type: "file",
@@ -186,10 +208,7 @@ export const dbMessagesToCore = async (
                         output: "output" in p ? p.output : undefined
                     })
                 } else if (p.type === "reasoning" && "text" in p) {
-                    mapped_content.push({
-                        type: "reasoning",
-                        text: p.text
-                    })
+                    mapped_content.push({ type: "reasoning", text: p.text })
                 }
             }
 
@@ -203,7 +222,7 @@ export const dbMessagesToCore = async (
             if (
                 lastMessage &&
                 lastMessage.role === "assistant" &&
-                tool_calls.length === 0 && // Don't merge if current message has tool results
+                tool_calls.length === 0 && // Don't merge if current message has tool calls
                 typeof lastMessage.content === "object"
             ) {
                 // Merge with previous assistant message
@@ -235,17 +254,5 @@ export const dbMessagesToCore = async (
     }
 
     mapped_messages.reverse()
-
-    // console.log("[cvx][chat] mapped_messages", mapped_messages.length)
-    // for (let i = 0; i < mapped_messages.length; i++) {
-    //     const m = mapped_messages[i]
-    //     const roughContent =
-    //         typeof m.content === "object"
-    //             ? m.content
-    //                   .map((c) => (c.type === "text" ? c.text.slice(0, 100) : `[${c.type}]`))
-    //                   .join(",")
-    //             : m.content
-    //     console.log(` History[${i}](${m.role}) ${roughContent}`)
-    // }
     return mapped_messages
 }

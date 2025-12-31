@@ -131,7 +131,6 @@ export const chatGETV2 = httpAction(async (ctx, req) => {
         return new Response(null, { status: 204 })
     }
 
-    const { searchParams } = new URL(req.url)
     const url = new URL(req.url)
     const pathParts = url.pathname.split("/").filter(Boolean)
 
