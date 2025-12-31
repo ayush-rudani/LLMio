@@ -183,7 +183,7 @@ export const dbMessagesToCore = async (
                         type: "tool-result",
                         toolCallId: p.toolCallId,
                         toolName: p.toolName,
-                        output: p.output
+                        output: "output" in p ? p.output : undefined
                     })
                 } else if (p.type === "reasoning" && "text" in p) {
                     mapped_content.push({

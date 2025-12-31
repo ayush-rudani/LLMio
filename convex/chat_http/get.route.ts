@@ -10,6 +10,7 @@ import { getResumableStreamContext } from "../lib/resumable_stream_context"
 import type { Thread } from "../schema"
 import { RESPONSE_OPTS } from "./shared"
 
+// @deprecated
 export const chatGET = httpAction(async (ctx, req) => {
     const streamContext = getResumableStreamContext()
     const resumeRequestedAt = new Date()
