@@ -3,7 +3,7 @@ export const RESPONSE_OPTS = {
     statusText: "OK",
     headers: {
         "Content-Type": "text/event-stream",
-        "X-Vercel-AI-Data-Stream": "v1",
+        "x-vercel-ai-ui-message-stream": "v1",
         "Cache-Control": "no-cache",
         Connection: "keep-alive"
     }

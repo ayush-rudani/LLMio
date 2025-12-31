@@ -119,7 +119,7 @@
         "remark-gfm": "^4.0.1",
         "remark-math": "^6.0.0",
         "resend": "^4.8.0",
-        "resumable-stream": "^2.2.9",
+        "resumable-stream": "^2.2.10",
         "shiki": "^3.6.0",
         "sonner": "^2.0.7",
         "supermemory": "^3.14.0",
