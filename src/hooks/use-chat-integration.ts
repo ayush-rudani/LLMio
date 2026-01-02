@@ -133,8 +133,13 @@ export function useChatIntegration<IsShared extends boolean>({
                         ...(targetMode && targetMode !== "normal" && { targetMode })
                     }
                 }
+            },
+            prepareReconnectToStreamRequest: ({ id }) => {
+                return {
+                    api: `${browserEnv("VITE_CONVEX_API_URL")}/chat?chatId=${id}`
+                }
             }
-        }) as any,
+        }),
         // Handle custom data parts (thread_id, stream_id) from the server
         onData: (dataPart) => {
             console.log("[UCI:data_part]", { dataPart })
