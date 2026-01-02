@@ -1,16 +1,18 @@
 import { ThemeProvider } from "@/components/theme-provider"
 import { authClient } from "@/lib/auth-client"
+import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react"
 import { ConvexQueryClient } from "@convex-dev/react-query"
-import { AuthQueryProvider } from "@daveyplate/better-auth-tanstack"
 import { AuthUIProviderTanstack } from "@daveyplate/better-auth-ui/tanstack"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ClientOnly, Link, useRouter } from "@tanstack/react-router"
 import { ConvexQueryCacheProvider } from "convex-helpers/react/cache"
+import { ConvexReactClient } from "convex/react"
 import type { ReactNode } from "react"
 import { Toaster } from "sonner"
 import { browserEnv } from "./lib/browser-env"
 
-export const convexQueryClient = new ConvexQueryClient(browserEnv("VITE_CONVEX_URL"))
+const convex = new ConvexReactClient(browserEnv("VITE_CONVEX_URL"))
+export const convexQueryClient = new ConvexQueryClient(convex)
 
 export const queryClient: QueryClient = new QueryClient({
     defaultOptions: {
@@ -29,9 +31,9 @@ export function Providers({ children }: { children: ReactNode }) {
 
     return (
         <ClientOnly>
-            <ConvexQueryCacheProvider>
-                <QueryClientProvider client={queryClient}>
-                    <AuthQueryProvider>
+            <ConvexBetterAuthProvider client={convex} authClient={authClient}>
+                <ConvexQueryCacheProvider>
+                    <QueryClientProvider client={queryClient}>
                         <ThemeProvider>
                             <AuthUIProviderTanstack
                                 authClient={authClient}
@@ -44,9 +46,9 @@ export function Providers({ children }: { children: ReactNode }) {
                                 <Toaster />
                             </AuthUIProviderTanstack>
                         </ThemeProvider>
-                    </AuthQueryProvider>
-                </QueryClientProvider>
-            </ConvexQueryCacheProvider>
+                    </QueryClientProvider>
+                </ConvexQueryCacheProvider>
+            </ConvexBetterAuthProvider>
         </ClientOnly>
     )
 }

@@ -4,10 +4,7 @@ import { HeadContent, Outlet, Scripts } from "@tanstack/react-router"
 import type { ReactNode } from "react"
 
 import { ThemeScript } from "@/components/theme-script"
-import { auth } from "@/lib/auth"
 import globals_css from "@/styles/globals.css?url"
-import { createServerFn } from "@tanstack/react-start"
-import { getHeaders } from "@tanstack/react-start/server"
 import { Analytics } from "@vercel/analytics/react"
 import { Providers } from "../providers"
 
@@ -15,22 +12,6 @@ import { Providers } from "../providers"
 const SITE_TITLE = "LLMio Chat"
 const SITE_DESCRIPTION = "Powerful AI chatbot. By interns, for interns."
 const SITE_URL = "https://llmio.ayushrudani.com" // Update this to your actual domain
-
-const getAccessToken = createServerFn().handler(async (ctx) => {
-    const headers = await getHeaders()
-    if (!headers) return null
-
-    const headersObject = new Headers()
-    for (const [key, value] of Object.entries(headers)) {
-        if (value) {
-            headersObject.set(key, value)
-        }
-    }
-    const { token } = await auth.api.getToken({
-        headers: headersObject
-    })
-    return token
-})
 
 export const Route = createRootRouteWithContext<{
     queryClient: QueryClient
