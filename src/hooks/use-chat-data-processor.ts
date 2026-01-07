@@ -22,7 +22,7 @@ export function useChatDataProcessor({ messages }: UseChatDataProcessorProps) {
                 const threadIdValue = part.data as string
                 setThreadId(threadIdValue)
                 if (typeof window !== "undefined") {
-                    window.history.replaceState({}, "", `/thread/${threadIdValue}`)
+                    window.history.pushState({}, "", `/thread/${threadIdValue}`)
                 }
                 setShouldUpdateQuery(true)
                 console.log("[CDP:thread_id]", { t: threadIdValue })

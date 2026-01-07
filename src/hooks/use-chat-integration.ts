@@ -143,30 +143,30 @@ export function useChatIntegration<IsShared extends boolean>({
         // Handle custom data parts (thread_id, stream_id) from the server
         onData: (dataPart) => {
             console.log("[UCI:data_part]", { dataPart })
-            if (isShared) return
-            if (dataPart.type === "data-thread_id" && typeof dataPart.data === "string") {
-                setThreadId(dataPart.data)
-                if (typeof window !== "undefined") {
-                    window.history.replaceState({}, "", `/thread/${dataPart.data}`)
-                }
-                setShouldUpdateQuery(true)
-                console.log("[UCI:onData:thread_id]", { t: dataPart.data })
-            }
-            if (
-                dataPart.type === "data-stream_id" &&
-                typeof dataPart.data === "string" &&
-                threadId
-            ) {
-                const currentThreadId = useChatStore.getState().threadId
-                if (currentThreadId) {
-                    setAttachedStreamId(currentThreadId, dataPart.data)
-                    setPendingStream(currentThreadId, false)
-                    console.log("[UCI:onData:stream_id]", {
-                        t: currentThreadId,
-                        sid: dataPart.data.slice(0, 5)
-                    })
-                }
-            }
+            // if (isShared) return
+            // if (dataPart.type === "data-thread_id" && typeof dataPart.data === "string") {
+            //     setThreadId(dataPart.data)
+            //     if (typeof window !== "undefined") {
+            //         window.history.replaceState({}, "", `/thread/${dataPart.data}`)
+            //     }
+            //     setShouldUpdateQuery(true)
+            //     console.log("[UCI:onData:thread_id]", { t: dataPart.data })
+            // }
+            // if (
+            //     dataPart.type === "data-stream_id" &&
+            //     typeof dataPart.data === "string" &&
+            //     threadId
+            // ) {
+            //     const currentThreadId = useChatStore.getState().threadId
+            //     if (currentThreadId) {
+            //         setAttachedStreamId(currentThreadId, dataPart.data)
+            //         setPendingStream(currentThreadId, false)
+            //         console.log("[UCI:onData:stream_id]", {
+            //             t: currentThreadId,
+            //             sid: dataPart.data.slice(0, 5)
+            //         })
+            //     }
+            // }
         },
         onFinish: () => {
             if (!isShared && shouldUpdateQuery) {

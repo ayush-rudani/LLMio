@@ -5,6 +5,7 @@ export const RESPONSE_OPTS = {
         "Content-Type": "text/event-stream",
         "x-vercel-ai-ui-message-stream": "v1",
         "Cache-Control": "no-cache",
-        Connection: "keep-alive"
+        Connection: "keep-alive",
+        "Content-Encoding": "none"
     }
 }

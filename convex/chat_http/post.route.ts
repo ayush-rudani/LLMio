@@ -24,7 +24,6 @@ import { generateThreadName } from "./generate_thread_name"
 import { getModel } from "./get_model"
 import { generateAndStoreImage } from "./image_generation"
 import { manualStreamTransform } from "./manual_stream_transform"
-import { buildPrompt } from "./prompt"
 import { RESPONSE_OPTS } from "./shared"
 
 const buildGoogleProviderOptions = (
@@ -346,17 +345,7 @@ export const chatPOST = httpAction(async (ctx, req) => {
                     tools: modelData.abilities.includes("function_calling")
                         ? await getToolkit(ctx, body.enabledTools, filteredSettings)
                         : undefined,
-                    messages: [
-                        ...(modelData.modelId !== "gemini-2.0-flash-image-generation"
-                            ? [
-                                  {
-                                      role: "system",
-                                      content: buildPrompt(body.enabledTools, settings)
-                                  } as const
-                              ]
-                            : []),
-                        ...mapped_messages
-                    ],
+                    messages: [...mapped_messages],
                     providerOptions: {
                         google: buildGoogleProviderOptions(modelData.modelId, body.reasoningEffort),
                         openai: buildOpenAIProviderOptions(modelData.modelId, body.reasoningEffort),

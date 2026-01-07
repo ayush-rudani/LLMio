@@ -296,9 +296,22 @@ export const manualStreamTransform = (
                     break
                 }
 
+                case "abort": {
+                    const uiChunk: UIMessageChunk = {
+                        type: "error",
+                        errorText: "Stream error occurred"
+                    }
+                    controller.enqueue(uiChunk)
+                    parts.push({
+                        type: "error",
+                        errorText: "Stream error occurred"
+                    })
+                    break
+                }
+
                 default: {
-                    const exhaustiveCheck = chunkType
-                    throw new Error(`Unknown chunk type: ${exhaustiveCheck}`)
+                    console.warn(`[cvx][chat][stream] Unhandled chunk type: ${chunkType}`)
+                    break
                 }
             }
         }
