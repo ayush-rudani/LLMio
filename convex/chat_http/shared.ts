@@ -2,8 +2,9 @@ export const RESPONSE_OPTS = {
     status: 200,
     statusText: "OK",
     headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "X-Vercel-AI-Data-Stream": "v1",
-        "Keep-Alive": "timeout=5, max=100"
+        "Content-Type": "text/event-stream",
+        "x-vercel-ai-ui-message-stream": "v1",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive"
     }
 }

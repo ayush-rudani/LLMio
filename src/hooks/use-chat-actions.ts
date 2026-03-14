@@ -1,8 +1,7 @@
 import type { Id } from "@/convex/_generated/dataModel"
 import { type UploadedFile, useChatStore } from "@/lib/chat-store"
-import type { FileUIPart } from "@ai-sdk/ui-utils"
+import type { FileUIPart } from "ai" // Changed from "@ai-sdk/ui-utils"
 import type { UIMessage } from "ai"
-import { nanoid } from "nanoid"
 import { useCallback } from "react"
 import { useChatIntegration } from "./use-chat-integration"
 
@@ -15,7 +14,8 @@ export function useChatActions({
 }) {
     const { uploadedFiles, setUploadedFiles, setTargetFromMessageId, setTargetMode } =
         useChatStore()
-    const { status, append, stop, messages, setMessages, reload } = useChatIntegration({
+    // Changed: append → sendMessage, reload → regenerate
+    const { status, sendMessage, stop, messages, setMessages, regenerate } = useChatIntegration({
         threadId,
         folderId
     })
@@ -42,26 +42,24 @@ export function useChatActions({
                 return
             }
 
-            append({
-                id: nanoid(),
-                role: "user",
-                content: inputValue,
+            // V5: Use sendMessage instead of append, remove content property
+            sendMessage({
+                // V5: Don't include id, role, createdAt - these are handled by useChat
                 parts: [
                     ...finalFiles.map((file) => {
                         return {
-                            type: "file",
-                            data: file.key,
-                            mimeType: file.fileType
+                            type: "file" as const,
+                            url: file.key, // Changed: data → url
+                            mediaType: file.fileType // Changed: mimeType → mediaType
                         } satisfies FileUIPart
                     }),
-                    { type: "text", text: inputValue }
-                ],
-                createdAt: new Date()
+                    { type: "text" as const, text: finalInput }
+                ]
             })
 
             setUploadedFiles([])
         },
-        [append, stop, status, uploadedFiles, setUploadedFiles]
+        [sendMessage, stop, status, uploadedFiles, setUploadedFiles]
     )
 
     const handleRetry = useCallback(
@@ -77,16 +75,12 @@ export function useChatActions({
                 messageId: message.id
             })
             setMessages(messagesUpToRetry)
-            setTargetFromMessageId(undefined)
-            setTargetMode("normal")
-            reload({
-                body: {
-                    targetMode: "retry",
-                    targetFromMessageId: message.id
-                }
-            })
+            setTargetFromMessageId(message.id)
+            setTargetMode("retry")
+            // V5: regenerate takes messageId as parameter, body is passed as second argument
+            regenerate({ messageId: message.id })
         },
-        [messages, setMessages, reload]
+        [messages, setMessages, regenerate, setTargetFromMessageId, setTargetMode]
     )
 
     const handleEditAndRetry = useCallback(
@@ -98,7 +92,7 @@ export function useChatActions({
             const messagesUpToEdit = messages.slice(0, messageIndex)
             const updatedEditedMessage = {
                 ...messages[messageIndex],
-                content: newContent,
+                // V5: Remove content property, only use parts
                 parts: [{ type: "text" as const, text: newContent }]
             }
 
@@ -108,16 +102,12 @@ export function useChatActions({
                 messageId
             })
             setMessages([...messagesUpToEdit, updatedEditedMessage])
-            setTargetFromMessageId(undefined)
-            setTargetMode("normal")
-            reload({
-                body: {
-                    targetMode: "edit",
-                    targetFromMessageId: messageId
-                }
-            })
+            setTargetFromMessageId(messageId)
+            setTargetMode("edit")
+            // V5: regenerate takes messageId as parameter, body is passed as second argument
+            regenerate({ messageId })
         },
-        [messages, setMessages, setTargetFromMessageId, reload]
+        [messages, setMessages, setTargetFromMessageId, setTargetMode, regenerate]
     )
 
     return {

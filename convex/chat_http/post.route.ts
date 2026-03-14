@@ -1,10 +1,5 @@
-import type {
-    FileUIPart,
-    ReasoningUIPart,
-    TextUIPart,
-    ToolInvocationUIPart
-} from "@ai-sdk/ui-utils"
-import { formatDataStreamPart } from "ai"
+import type { FileUIPart, ReasoningUIPart, TextUIPart, ToolUIPart } from "ai"
+import { JsonToSseTransformStream, stepCountIs } from "ai"
 import { nanoid } from "nanoid"
 
 import { ChatError } from "@/lib/errors"
@@ -12,7 +7,8 @@ import type { ReasoningEffort } from "@/lib/model-store"
 import type { AnthropicProviderOptions } from "@ai-sdk/anthropic"
 import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google"
 import type { OpenAIResponsesProviderOptions } from "@ai-sdk/openai"
-import { createDataStream, smoothStream, streamText } from "ai"
+import { createUIMessageStream, smoothStream, streamText } from "ai"
+import type { DynamicToolUIPart } from "ai"
 import type { Infer } from "convex/values"
 import { internal } from "../_generated/api"
 import type { Id } from "../_generated/dataModel"
@@ -22,8 +18,8 @@ import { getUserIdentity } from "../lib/identity"
 import type { ImageSize } from "../lib/models"
 import { getResumableStreamContext } from "../lib/resumable_stream_context"
 import { type AbilityId, getToolkit } from "../lib/toolkit"
-import type { HTTPAIMessage } from "../schema/message"
-import type { ErrorUIPart } from "../schema/parts"
+import type { HTTPAIMessageV2 } from "../schema/message"
+import type { ErrorUIPartV2 } from "../schema/parts"
 import { generateThreadName } from "./generate_thread_name"
 import { getModel } from "./get_model"
 import { generateAndStoreImage } from "./image_generation"
@@ -89,7 +85,7 @@ const buildAnthropicProviderOptions = (
 export const chatPOST = httpAction(async (ctx, req) => {
     const body: {
         id?: string
-        message: Infer<typeof HTTPAIMessage>
+        message: Infer<typeof HTTPAIMessageV2>
         model: string
         proposedNewAssistantId: string
         enabledTools: AbilityId[]
@@ -137,12 +133,14 @@ export const chatPOST = httpAction(async (ctx, req) => {
     const streamStartTime = Date.now()
 
     const remoteCancel = new AbortController()
+
     const parts: Array<
         | TextUIPart
         | (ReasoningUIPart & { duration?: number })
-        | ToolInvocationUIPart
+        | DynamicToolUIPart
+        | ToolUIPart
         | FileUIPart
-        | Infer<typeof ErrorUIPart>
+        | Infer<typeof ErrorUIPartV2>
     > = []
 
     const uploadPromises: Promise<void>[] = []
@@ -169,8 +167,8 @@ export const chatPOST = httpAction(async (ctx, req) => {
         reasoningTokens: 0
     }
 
-    const stream = createDataStream({
-        execute: async (dataStream) => {
+    const stream = createUIMessageStream({
+        execute: async ({ writer }) => {
             await ctx.runMutation(internal.threads.updateThreadStreamingState, {
                 threadId: mutationResult.threadId,
                 isLive: true,
@@ -189,19 +187,21 @@ export const chatPOST = httpAction(async (ctx, req) => {
                 )
             }
 
-            dataStream.writeData({
-                type: "thread_id",
-                content: mutationResult.threadId
+            writer.write({
+                type: "data-thread_id",
+                id: "thread_id",
+                data: mutationResult.threadId
             })
 
-            dataStream.writeData({
-                type: "stream_id",
-                content: streamId
+            writer.write({
+                type: "data-stream_id",
+                id: "stream_id",
+                data: streamId
             })
 
-            dataStream.writeMessageAnnotation({
-                type: "model_name",
-                content: modelName
+            writer.write({
+                type: "data-model_name",
+                data: modelName
             })
 
             if (model.modelType === "image") {
@@ -222,44 +222,37 @@ export const chatPOST = httpAction(async (ctx, req) => {
                     console.error("[cvx][chat][stream] No valid prompt found for image generation")
                     parts.push({
                         type: "error",
-                        error: {
-                            code: "unknown",
-                            message:
-                                "No prompt provided for image generation. Please provide a description of the image you want to create."
-                        }
-                    })
-                    dataStream.write(
-                        formatDataStreamPart(
-                            "error",
+                        errorText:
                             "No prompt provided for image generation. Please provide a description of the image you want to create."
-                        )
-                    )
+                    })
+                    writer.write({
+                        type: "error",
+                        errorText:
+                            "No prompt provided for image generation. Please provide a description of the image you want to create."
+                    })
                 } else {
                     // Use the provided imageSize or fall back to default
                     const imageSize: ImageSize = (body.imageSize || "1:1") as ImageSize
 
                     // Create mock tool call for image generation
-                    const mockToolCall: ToolInvocationUIPart = {
-                        type: "tool-invocation",
-                        toolInvocation: {
-                            state: "call",
-                            args: {
-                                imageSize,
-                                prompt
-                            },
-                            toolCallId: nanoid(),
-                            toolName: "image_generation"
+                    const mockToolCall: DynamicToolUIPart = {
+                        type: "dynamic-tool",
+                        state: "input-available",
+                        toolCallId: nanoid(),
+                        toolName: "image_generation",
+                        input: {
+                            imageSize,
+                            prompt
                         }
                     }
-
                     parts.push(mockToolCall)
-                    dataStream.write(
-                        formatDataStreamPart("tool_call", {
-                            toolCallId: mockToolCall.toolInvocation.toolCallId,
-                            toolName: mockToolCall.toolInvocation.toolName,
-                            args: mockToolCall.toolInvocation.args
-                        })
-                    )
+
+                    writer.write({
+                        type: "tool-input-available",
+                        toolCallId: mockToolCall.toolCallId,
+                        toolName: mockToolCall.toolName,
+                        input: mockToolCall.input
+                    })
 
                     // Patch the message with the tool call first
                     await ctx.runMutation(internal.messages.patchMessage, {
@@ -286,60 +279,52 @@ export const chatPOST = httpAction(async (ctx, req) => {
                         })
 
                         // Send tool result
-                        dataStream.write(
-                            formatDataStreamPart("tool_result", {
-                                toolCallId: mockToolCall.toolInvocation.toolCallId,
-                                result: {
-                                    assets: result.assets,
-                                    prompt: result.prompt,
-                                    modelId: result.modelId
-                                }
-                            })
-                        )
+                        writer.write({
+                            type: "tool-output-available",
+                            toolCallId: mockToolCall.toolCallId,
+                            output: {
+                                assets: result.assets,
+                                prompt: result.prompt,
+                                modelId: result.modelId
+                            }
+                        })
 
                         // Update parts with successful result
                         parts[0] = {
-                            type: "tool-invocation",
-                            toolInvocation: {
-                                state: "result",
-                                args: mockToolCall.toolInvocation.args,
-                                result: {
-                                    assets: result.assets,
-                                    prompt: result.prompt,
-                                    modelId: result.modelId
-                                },
-                                toolCallId: mockToolCall.toolInvocation.toolCallId,
-                                toolName: "image_generation"
+                            type: "dynamic-tool",
+                            state: "output-available", // Changed from "result"
+                            toolCallId: mockToolCall.toolCallId,
+                            toolName: "image_generation",
+                            input: mockToolCall.input, // Changed from args
+                            output: {
+                                // Changed from result
+                                assets: result.assets,
+                                prompt: result.prompt,
+                                modelId: result.modelId
                             }
-                        } satisfies ToolInvocationUIPart
+                        } satisfies DynamicToolUIPart // Changed from ToolInvocationPart
                     } catch (error) {
                         console.error("[cvx][chat][stream] Image generation failed:", error)
 
                         // Send error in tool result
                         const errorMessage =
                             error instanceof Error ? error.message : "Unknown error occurred"
-                        dataStream.write(
-                            formatDataStreamPart("tool_result", {
-                                toolCallId: mockToolCall.toolInvocation.toolCallId,
-                                result: {
-                                    error: errorMessage
-                                }
-                            })
-                        )
+
+                        writer.write({
+                            type: "tool-output-error",
+                            toolCallId: mockToolCall.toolCallId,
+                            errorText: errorMessage
+                        })
 
                         // Update parts with error
                         parts[0] = {
-                            type: "tool-invocation",
-                            toolInvocation: {
-                                state: "result",
-                                args: mockToolCall.toolInvocation.args,
-                                result: {
-                                    error: errorMessage
-                                },
-                                toolCallId: mockToolCall.toolInvocation.toolCallId,
-                                toolName: "image_generation"
-                            }
-                        } satisfies ToolInvocationUIPart
+                            type: "dynamic-tool",
+                            state: "output-error", // Changed from "result"
+                            toolCallId: mockToolCall.toolCallId,
+                            toolName: "image_generation",
+                            input: mockToolCall.input, // Changed from args
+                            errorText: errorMessage // Changed from result.error
+                        } satisfies DynamicToolUIPart // Changed from ToolInvocationUIPart
                     }
                 }
             } else {
@@ -354,10 +339,9 @@ export const chatPOST = httpAction(async (ctx, req) => {
                 }
                 const result = streamText({
                     model: model,
-                    maxSteps: 100,
+                    stopWhen: stepCountIs(100),
                     abortSignal: remoteCancel.signal,
                     experimental_transform: smoothStream(),
-                    toolCallStreaming: true,
                     temperature: 0.5,
                     tools: modelData.abilities.includes("function_calling")
                         ? await getToolkit(ctx, body.enabledTools, filteredSettings)
@@ -383,7 +367,7 @@ export const chatPOST = httpAction(async (ctx, req) => {
                     }
                 })
 
-                dataStream.merge(
+                writer.merge(
                     result.fullStream.pipeThrough(
                         manualStreamTransform(
                             parts,
@@ -395,7 +379,6 @@ export const chatPOST = httpAction(async (ctx, req) => {
                         )
                     )
                 )
-
                 await result.consumeStream()
                 await Promise.allSettled(uploadPromises)
                 console.log("uploadPromises", uploadPromises)
@@ -413,12 +396,9 @@ export const chatPOST = httpAction(async (ctx, req) => {
                         : [
                               {
                                   type: "error",
-                                  error: {
-                                      code: "no-response",
-                                      message:
-                                          "The model did not generate a response. Please try again."
-                                  }
-                              }
+                                  errorText:
+                                      "The model did not generate a response. Please try again."
+                              } satisfies Infer<typeof ErrorUIPartV2>
                           ],
                 metadata: {
                     modelId: body.model,
@@ -456,13 +436,23 @@ export const chatPOST = httpAction(async (ctx, req) => {
 
     const streamContext = getResumableStreamContext()
     if (streamContext) {
-        return new Response(
-            (await streamContext.resumableStream(streamId, () => stream))?.pipeThrough(
-                new TextEncoderStream()
-            ),
-            RESPONSE_OPTS
+        const resumedStream = await streamContext.resumableStream(
+            streamId,
+            () => stream as unknown as ReadableStream<string>
         )
+        if (resumedStream) {
+            return new Response(
+                resumedStream
+                    .pipeThrough(new JsonToSseTransformStream())
+                    .pipeThrough(new TextEncoderStream()),
+                RESPONSE_OPTS
+            )
+        }
+        return new Response(null, { status: 204 })
     }
 
-    return new Response(stream.pipeThrough(new TextEncoderStream()), RESPONSE_OPTS)
+    return new Response(
+        stream.pipeThrough(new JsonToSseTransformStream()).pipeThrough(new TextEncoderStream()),
+        RESPONSE_OPTS
+    )
 })

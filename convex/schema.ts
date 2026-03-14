@@ -1,12 +1,13 @@
 import { defineSchema, defineTable } from "convex/server"
 import { Project } from "./schema/folders"
-import { Message } from "./schema/message"
+import { Message, MessageV2 } from "./schema/message"
 import { UserSettings } from "./schema/settings"
 import { ResumableStream } from "./schema/streams"
 import { SharedThread, Thread } from "./schema/thread"
 import { UsageEvent } from "./schema/usage"
 
 export { Thread, Message, SharedThread, UsageEvent, UserSettings, Project }
+export { MessageV2 } from "./schema/message"
 
 export default defineSchema({
     threads: defineTable(Thread)
@@ -18,7 +19,7 @@ export default defineSchema({
             filterFields: ["authorId"]
         }),
 
-    messages: defineTable(Message)
+    messages: defineTable(MessageV2)
         .index("byThreadId", ["threadId"])
         .index("byMessageId", ["messageId"]),
 

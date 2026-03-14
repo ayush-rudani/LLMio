@@ -1,7 +1,7 @@
 import { v } from "convex/values"
 import type { Id } from "./_generated/dataModel"
 import { internalMutation, internalQuery } from "./_generated/server"
-import { MessagePart } from "./schema/parts"
+import { MessagePartV2 } from "./schema/parts"
 
 export const getMessagesByThreadId = internalQuery({
     args: { threadId: v.id("threads") },
@@ -18,7 +18,7 @@ export const patchMessage = internalMutation({
     args: {
         threadId: v.id("threads"),
         messageId: v.string(),
-        parts: v.array(MessagePart),
+        parts: v.array(MessagePartV2),
         metadata: v.optional(
             v.object({
                 modelId: v.optional(v.string()),
@@ -39,7 +39,7 @@ export const patchMessage = internalMutation({
         if (!msg) return
 
         await db.patch(msg._id as Id<"messages">, {
-            parts,
+            parts: parts,
             metadata: {
                 ...msg.metadata,
                 ...metadata

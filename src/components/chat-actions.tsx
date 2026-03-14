@@ -27,39 +27,47 @@ export const ChatActions = memo(
                 const casted = message.metadata as { modelName?: string }
                 if (casted.modelName) return casted.modelName
             }
-            const found = message.annotations?.find(
-                (annotation) =>
-                    annotation &&
-                    typeof annotation === "object" &&
-                    "type" in annotation &&
-                    annotation.type === "model_name"
-            )
-            if (found && typeof found === "object" && "content" in found) {
-                return found.content?.toString()
-            }
             return undefined
-        }, [
-            message.annotations?.length,
-            (message as { metadata?: { modelName?: string } }).metadata
-        ])
+        }, [(message as { metadata?: { modelName?: string } }).metadata])
 
         const imageGenerationAssets = useMemo(() => {
             const assets: string[] = []
-            message.parts
-                .filter((part) => part.type === "tool-invocation")
-                .forEach((part) => {
-                    if (
-                        part.toolInvocation.toolName === "image_generation" &&
-                        part.toolInvocation.state === "result" &&
-                        part.toolInvocation.result?.assets
-                    ) {
-                        part.toolInvocation.result.assets.forEach((asset: any) => {
+            message.parts.forEach((part) => {
+                if (
+                    part.type === "dynamic-tool" &&
+                    "toolName" in part &&
+                    part.toolName === "image_generation" &&
+                    part.state === "output-available" &&
+                    part.output &&
+                    typeof part.output === "object" &&
+                    "assets" in part.output
+                ) {
+                    const output = part.output as { assets?: Array<{ imageUrl?: string }> }
+                    if (output.assets) {
+                        output.assets.forEach((asset: any) => {
                             if (asset.imageUrl) {
                                 assets.push(asset.imageUrl)
                             }
                         })
                     }
-                })
+                } else if (
+                    part.type.startsWith("tool-") &&
+                    part.type === "tool-image_generation" &&
+                    part.state === "output-available" &&
+                    part.output &&
+                    typeof part.output === "object" &&
+                    "assets" in part.output
+                ) {
+                    const output = part.output as { assets?: Array<{ imageUrl?: string }> }
+                    if (output.assets) {
+                        output.assets.forEach((asset: any) => {
+                            if (asset.imageUrl) {
+                                assets.push(asset.imageUrl)
+                            }
+                        })
+                    }
+                }
+            })
             return assets
         }, [message.parts])
 

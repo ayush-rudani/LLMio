@@ -1,7 +1,7 @@
 import { corsRouter } from "convex-helpers/server/cors"
 import { httpRouter } from "convex/server"
 import { getFile, uploadFile } from "./attachments"
-import { chatGET } from "./chat_http/get.route"
+import { chatGETV2 } from "./chat_http/get.route"
 import { chatPOST } from "./chat_http/post.route"
 import { transcribeAudio } from "./speech_to_text"
 
@@ -30,10 +30,18 @@ cors.route({
     handler: chatPOST
 })
 
+// Exact match for /chat (query param style: /chat?chatId=xxx)
 cors.route({
     path: "/chat",
     method: "GET",
-    handler: chatGET
+    handler: chatGETV2
+})
+
+// Prefix match for /chat/{chatId}/stream pattern (AI SDK 5)
+cors.route({
+    pathPrefix: "/chat/",
+    method: "GET",
+    handler: chatGETV2
 })
 
 // File upload route

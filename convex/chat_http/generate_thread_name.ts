@@ -1,5 +1,5 @@
 import { ChatError } from "@/lib/errors"
-import { type CoreMessage, generateText } from "ai"
+import { type ModelMessage, generateText } from "ai"
 import type { GenericActionCtx } from "convex/server"
 import type { Infer } from "convex/values"
 import { internal } from "../_generated/api"
@@ -7,7 +7,7 @@ import type { DataModel, Id } from "../_generated/dataModel"
 import type { UserSettings } from "../schema"
 import { getModel } from "./get_model"
 
-const contentToText = (content: CoreMessage["content"]): string => {
+const contentToText = (content: ModelMessage["content"]): string => {
     if (typeof content === "string") {
         return content
     }
@@ -44,7 +44,7 @@ const contentToText = (content: CoreMessage["content"]): string => {
 export const generateThreadName = async (
     ctx: GenericActionCtx<DataModel>,
     threadId: Id<"threads">,
-    messages: CoreMessage[],
+    messages: ModelMessage[],
     userId: string,
     settings: Infer<typeof UserSettings>
 ) => {

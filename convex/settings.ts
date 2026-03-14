@@ -114,7 +114,7 @@ export const getUserRegistryInternal = internalQuery({
                 adapters: [`${model.providerId}:${model.modelId}`],
                 abilities: model.abilities,
                 contextLength: model.contextLength,
-                maxTokens: model.maxTokens,
+                maxOutputTokens: model.maxTokens,
                 customProviderId: model.providerId
             }
         }
