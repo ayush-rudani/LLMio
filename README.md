@@ -6,7 +6,7 @@ A modern, feature-rich AI chat application built by interns, for interns. It's t
 
 🔗 **Live demo →** [https://llmio.ayushrudani.com](https://llmio.ayushrudani.com)
 
-📚 **Documentation →** [https://docs.intern3.chat](https://docs.intern3.chat)
+📚 **Documentation →** [https://docs.intern3.chat](https://docs.intern3.chat) | [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ayush-rudani/LLMio)
 
 ## Core features
 
