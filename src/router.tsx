@@ -45,9 +45,6 @@ export function createRouter() {
 }
 
 const useBetterAuth = () => {
-    //   const { data: initialToken } = useQuery({
-    //     queryKey: ["auth_token"],
-    //   });
     const data = useToken({
         initialData: () => {
             const token = queryClient.getQueryData(["auth_token"])
@@ -55,11 +52,22 @@ const useBetterAuth = () => {
         }
     })
     const session = useSession()
+
+    // Temporary debug logging
+    if (typeof window !== "undefined") {
+        console.log("[useBetterAuth] Token exists:", !!data.token)
+        console.log("[useBetterAuth] Session user:", session.user?.id)
+    }
+
     return useMemo(
         () => ({
             isLoading: data.isPending || data.isLoading,
             isAuthenticated: !!session.user?.id,
-            fetchAccessToken: async () => data.token ?? null
+            fetchAccessToken: async () => {
+                const token = data.token ?? null
+                console.log("[fetchAccessToken] Token:", token ? "present" : "missing")
+                return token
+            }
         }),
         [data.isPending, data.isLoading, session.user?.id, data.token]
     )

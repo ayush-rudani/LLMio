@@ -1,114 +1,148 @@
 import { cn } from "@/lib/utils"
-import type { ToolInvocation } from "ai"
+import type { DynamicToolUIPart, ToolUIPart } from "ai"
+import { getToolName } from "ai"
 import { ChevronDown, Loader2, Wrench } from "lucide-react"
 import { memo, useEffect, useRef, useState } from "react"
 import { Codeblock } from "../codeblock"
 
-export const GenericToolRenderer = memo(
-    ({ toolInvocation }: { toolInvocation: ToolInvocation }) => {
-        const [isExpanded, setIsExpanded] = useState(false)
-        const contentRef = useRef<HTMLDivElement>(null)
-        const innerRef = useRef<HTMLDivElement>(null)
+type ToolPart = ToolUIPart | DynamicToolUIPart
 
-        const isLoading = toolInvocation.state === "partial-call" || toolInvocation.state === "call"
-        const hasResults = toolInvocation.state === "result" && toolInvocation.result
+export const GenericToolRenderer = memo(({ toolInvocation }: { toolInvocation: ToolPart }) => {
+    const [isExpanded, setIsExpanded] = useState(false)
+    const contentRef = useRef<HTMLDivElement>(null)
+    const innerRef = useRef<HTMLDivElement>(null)
 
-        useEffect(() => {
-            if (!contentRef.current || !innerRef.current) return
+    // V5 states: "input-streaming", "input-available", "output-available", "output-error"
+    const isLoading =
+        toolInvocation.state === "input-streaming" || toolInvocation.state === "input-available"
+    const hasResults =
+        toolInvocation.state === "output-available" && toolInvocation.output !== undefined
+    const hasError = toolInvocation.state === "output-error"
 
-            const observer = new ResizeObserver(() => {
-                if (contentRef.current && innerRef.current && isExpanded) {
-                    contentRef.current.style.maxHeight = `${innerRef.current.scrollHeight}px`
-                }
-            })
+    // Extract tool name - works for both typed and dynamic tools
+    const toolName =
+        toolInvocation.type === "dynamic-tool"
+            ? toolInvocation.toolName
+            : getToolName(toolInvocation)
 
-            observer.observe(innerRef.current)
+    useEffect(() => {
+        if (!contentRef.current || !innerRef.current) return
 
-            if (isExpanded) {
+        const observer = new ResizeObserver(() => {
+            if (contentRef.current && innerRef.current && isExpanded) {
                 contentRef.current.style.maxHeight = `${innerRef.current.scrollHeight}px`
             }
+        })
 
-            return () => observer.disconnect()
-        }, [isExpanded])
+        observer.observe(innerRef.current)
 
-        return (
-            <div className="w-full">
-                <button
-                    type="button"
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    className="flex w-full cursor-pointer items-center gap-2 text-left"
-                    disabled={isLoading}
-                >
-                    <div className="flex flex-1 items-center gap-2">
-                        {isLoading ? (
-                            <Loader2 className="size-4 animate-spin text-primary" />
-                        ) : (
-                            <Wrench className="size-4 text-primary" />
-                        )}
-                        <span className="font-medium text-primary">{toolInvocation.toolName}</span>
+        if (isExpanded) {
+            contentRef.current.style.maxHeight = `${innerRef.current.scrollHeight}px`
+        }
 
-                        {!isLoading && hasResults && (
-                            <div
-                                className={cn(
-                                    "ml-auto transform transition-transform",
-                                    isExpanded ? "rotate-180" : ""
-                                )}
-                            >
-                                <ChevronDown className="size-4 text-foreground" />
-                            </div>
-                        )}
-                    </div>
-                </button>
+        return () => observer.disconnect()
+    }, [isExpanded])
 
-                <div
-                    ref={contentRef}
-                    className={cn(
-                        "overflow-hidden transition-[max-height] duration-150 ease-out",
-                        "my-4 rounded-lg border bg-muted/50"
+    return (
+        <div className="w-full">
+            <button
+                type="button"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="flex w-full cursor-pointer items-center gap-2 text-left"
+                disabled={isLoading}
+            >
+                <div className="flex flex-1 items-center gap-2">
+                    {isLoading ? (
+                        <Loader2 className="size-4 animate-spin text-primary" />
+                    ) : hasError ? (
+                        <Wrench className="size-4 text-destructive" />
+                    ) : (
+                        <Wrench className="size-4 text-primary" />
                     )}
-                    style={{
-                        maxHeight: isExpanded ? contentRef.current?.scrollHeight : "0px"
-                    }}
-                >
-                    <div ref={innerRef} className="text-muted-foreground">
-                        {hasResults && (
-                            <div className="scrollbar-thin max-h-full overflow-y-auto px-3 pt-3 pb-3">
-                                <span className="font-medium text-foreground text-sm">
-                                    Arguments
-                                </span>
-                                <div className="mt-2 mb-3">
-                                    <Codeblock
-                                        className="language-json"
-                                        disable={{ expand: true }}
-                                        default={{ wrap: true }}
-                                    >
-                                        {JSON.stringify(toolInvocation.args, null, 2)}
-                                    </Codeblock>
-                                </div>
+                    <span className="font-medium text-primary">{toolName}</span>
 
-                                {toolInvocation.result && (
-                                    <>
-                                        <span className="font-medium text-foreground text-sm">
-                                            Result
-                                        </span>
-                                        <div className="mt-2 mb-3">
-                                            <Codeblock
-                                                className="language-json"
-                                                disable={{ expand: true }}
-                                                default={{ wrap: true }}
-                                            >
-                                                {JSON.stringify(toolInvocation.result, null, 2)}
-                                            </Codeblock>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        )}
-                    </div>
+                    {!isLoading && (hasResults || hasError) && (
+                        <div
+                            className={cn(
+                                "ml-auto transform transition-transform",
+                                isExpanded ? "rotate-180" : ""
+                            )}
+                        >
+                            <ChevronDown className="size-4 text-foreground" />
+                        </div>
+                    )}
+                </div>
+            </button>
+
+            <div
+                ref={contentRef}
+                className={cn(
+                    "overflow-hidden transition-[max-height] duration-150 ease-out",
+                    "my-4 rounded-lg border bg-muted/50"
+                )}
+                style={{
+                    maxHeight: isExpanded ? contentRef.current?.scrollHeight : "0px"
+                }}
+            >
+                <div ref={innerRef} className="text-muted-foreground">
+                    {(hasResults || hasError) && (
+                        <div className="scrollbar-thin max-h-full overflow-y-auto px-3 pt-3 pb-3">
+                            {toolInvocation.input !== undefined && (
+                                <>
+                                    <span className="font-medium text-foreground text-sm">
+                                        Arguments
+                                    </span>
+                                    <div className="mt-2 mb-3">
+                                        <Codeblock
+                                            className="language-json"
+                                            disable={{ expand: true }}
+                                            default={{ wrap: true }}
+                                        >
+                                            {JSON.stringify(toolInvocation.input, null, 2)}
+                                        </Codeblock>
+                                    </div>
+                                </>
+                            )}
+
+                            {hasError && toolInvocation.errorText && (
+                                <>
+                                    <span className="font-medium text-destructive text-sm">
+                                        Error
+                                    </span>
+                                    <div className="mt-2 mb-3">
+                                        <Codeblock
+                                            className="language-json"
+                                            disable={{ expand: true }}
+                                            default={{ wrap: true }}
+                                        >
+                                            {toolInvocation.errorText}
+                                        </Codeblock>
+                                    </div>
+                                </>
+                            )}
+
+                            {hasResults && toolInvocation.output !== undefined && (
+                                <>
+                                    <span className="font-medium text-foreground text-sm">
+                                        Result
+                                    </span>
+                                    <div className="mt-2 mb-3">
+                                        <Codeblock
+                                            className="language-json"
+                                            disable={{ expand: true }}
+                                            default={{ wrap: true }}
+                                        >
+                                            {JSON.stringify(toolInvocation.output, null, 2)}
+                                        </Codeblock>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
-        )
-    }
-)
+        </div>
+    )
+})
 
 GenericToolRenderer.displayName = "GenericToolRenderer"

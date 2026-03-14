@@ -96,7 +96,7 @@ export const getResumableStreamContext = () => {
                     publish: async (channel: string, message: string) => {
                         if (debugMode)
                             console.debug(`[Redis] Publishing to channel: ${channel} ${message}`)
-                        return await redis.publish(channel, JSON.stringify(message))
+                        return await redis.publish(channel, message)
                     },
                     set: async (key: string, value: string, options?: { EX?: number }) => {
                         if (debugMode) console.debug(`[Redis] SET ${key} ${value} ${options?.EX}`)

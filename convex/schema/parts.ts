@@ -5,10 +5,23 @@ export const TextPart = v.object({
     text: v.string()
 })
 
+export const TextPartV2 = v.object({
+    type: v.literal("text"),
+    text: v.string(),
+    state: v.optional(v.union(v.literal("streaming"), v.literal("done"))),
+    providerMetadata: v.optional(v.record(v.string(), v.record(v.string(), v.any())))
+})
+
 export const ImagePart = v.object({
     type: v.literal("image"),
     image: v.string(),
     mimeType: v.string()
+})
+
+export const ImagePartV2 = v.object({
+    type: v.literal("image"),
+    image: v.string(),
+    mediaType: v.optional(v.string())
 })
 
 export const ReasoningPart = v.object({
@@ -28,11 +41,25 @@ export const ReasoningPart = v.object({
     )
 })
 
+export const ReasoningPartV2 = v.object({
+    type: v.literal("reasoning"),
+    text: v.string(),
+    state: v.optional(v.union(v.literal("streaming"), v.literal("done"))),
+    providerMetadata: v.optional(v.record(v.string(), v.record(v.string(), v.any())))
+})
+
 export const FilePart = v.object({
     type: v.literal("file"),
     data: v.string(),
     filename: v.optional(v.string()),
     mimeType: v.optional(v.string())
+})
+
+export const FilePartV2 = v.object({
+    type: v.literal("file"),
+    url: v.string(),
+    filename: v.optional(v.string()),
+    mediaType: v.string()
 })
 
 export const ErrorUIPart = v.object({
@@ -42,6 +69,12 @@ export const ErrorUIPart = v.object({
         message: v.string()
     })
 })
+
+export const ErrorUIPartV2 = v.object({
+    type: v.literal("error"),
+    errorText: v.string()
+})
+
 export const ToolInvocationUIPart = v.object({
     type: v.literal("tool-invocation"),
     toolInvocation: v.object({
@@ -54,6 +87,252 @@ export const ToolInvocationUIPart = v.object({
     })
 })
 
+export const ToolUIPartV2Old = v.object({
+    type: v.string(),
+    toolCallId: v.string(),
+    state: v.union(
+        v.literal("input-streaming"),
+        v.literal("input-available"),
+        v.literal("output-available"),
+        v.literal("output-error")
+    ),
+    input: v.optional(v.any()),
+    output: v.optional(v.any()),
+    errorText: v.optional(v.string()),
+    providerExecuted: v.optional(v.boolean())
+})
+
+export const ToolUIPartV2 = v.union(
+    // input-streaming state
+    v.object({
+        type: v.string(),
+        toolCallId: v.string(),
+        title: v.optional(v.string()),
+        providerExecuted: v.optional(v.boolean()),
+        state: v.literal("input-streaming"),
+        input: v.optional(v.any())
+    }),
+    // input-available state
+    v.object({
+        type: v.string(),
+        toolCallId: v.string(),
+        title: v.optional(v.string()),
+        providerExecuted: v.optional(v.boolean()),
+        state: v.literal("input-available"),
+        input: v.any(),
+        callProviderMetadata: v.optional(v.record(v.string(), v.record(v.string(), v.any())))
+    }),
+    // approval-requested state
+    v.object({
+        type: v.string(),
+        toolCallId: v.string(),
+        title: v.optional(v.string()),
+        providerExecuted: v.optional(v.boolean()),
+        state: v.literal("approval-requested"),
+        input: v.any(),
+        callProviderMetadata: v.optional(v.record(v.string(), v.record(v.string(), v.any()))),
+        approval: v.object({
+            id: v.string()
+        })
+    }),
+    // approval-responded state
+    v.object({
+        type: v.string(),
+        toolCallId: v.string(),
+        title: v.optional(v.string()),
+        providerExecuted: v.optional(v.boolean()),
+        state: v.literal("approval-responded"),
+        input: v.any(),
+        callProviderMetadata: v.optional(v.record(v.string(), v.record(v.string(), v.any()))),
+        approval: v.object({
+            id: v.string(),
+            approved: v.boolean(),
+            reason: v.optional(v.string())
+        })
+    }),
+    // output-available state
+    v.object({
+        type: v.string(),
+        toolCallId: v.string(),
+        title: v.optional(v.string()),
+        providerExecuted: v.optional(v.boolean()),
+        state: v.literal("output-available"),
+        input: v.any(),
+        output: v.any(),
+        callProviderMetadata: v.optional(v.record(v.string(), v.record(v.string(), v.any()))),
+        preliminary: v.optional(v.boolean()),
+        approval: v.optional(
+            v.object({
+                id: v.string(),
+                approved: v.literal(true),
+                reason: v.optional(v.string())
+            })
+        )
+    }),
+    // output-error state
+    v.object({
+        type: v.string(),
+        toolCallId: v.string(),
+        title: v.optional(v.string()),
+        providerExecuted: v.optional(v.boolean()),
+        state: v.literal("output-error"),
+        input: v.optional(v.any()),
+        rawInput: v.optional(v.any()),
+        errorText: v.string(),
+        callProviderMetadata: v.optional(v.record(v.string(), v.record(v.string(), v.any()))),
+        approval: v.optional(
+            v.object({
+                id: v.string(),
+                approved: v.literal(true),
+                reason: v.optional(v.string())
+            })
+        )
+    }),
+    // output-denied state
+    v.object({
+        type: v.string(),
+        toolCallId: v.string(),
+        title: v.optional(v.string()),
+        providerExecuted: v.optional(v.boolean()),
+        state: v.literal("output-denied"),
+        input: v.any(),
+        callProviderMetadata: v.optional(v.record(v.string(), v.record(v.string(), v.any()))),
+        approval: v.object({
+            id: v.string(),
+            approved: v.literal(false),
+            reason: v.optional(v.string())
+        })
+    })
+)
+
+export const DynamicToolUIPartV2Old = v.object({
+    type: v.literal("dynamic-tool"),
+    toolName: v.string(),
+    toolCallId: v.string(),
+    title: v.optional(v.string()),
+    providerExecuted: v.optional(v.boolean()),
+    state: v.union(
+        v.literal("input-streaming"),
+        v.literal("input-available"),
+        v.literal("output-available"),
+        v.literal("output-error")
+    ),
+    input: v.optional(v.any()),
+    output: v.optional(v.any()),
+    errorText: v.optional(v.string()),
+    callProviderMetadata: v.optional(v.record(v.string(), v.record(v.string(), v.any()))),
+    preliminary: v.optional(v.boolean())
+})
+
+export const DynamicToolUIPartV2 = v.union(
+    // input-streaming state
+    v.object({
+        type: v.literal("dynamic-tool"),
+        toolName: v.string(),
+        toolCallId: v.string(),
+        title: v.optional(v.string()),
+        providerExecuted: v.optional(v.boolean()),
+        state: v.literal("input-streaming"),
+        input: v.optional(v.any())
+    }),
+    // input-available state
+    v.object({
+        type: v.literal("dynamic-tool"),
+        toolName: v.string(),
+        toolCallId: v.string(),
+        title: v.optional(v.string()),
+        providerExecuted: v.optional(v.boolean()),
+        state: v.literal("input-available"),
+        input: v.any(),
+        callProviderMetadata: v.optional(v.record(v.string(), v.record(v.string(), v.any())))
+    }),
+    // approval-requested state
+    v.object({
+        type: v.literal("dynamic-tool"),
+        toolName: v.string(),
+        toolCallId: v.string(),
+        title: v.optional(v.string()),
+        providerExecuted: v.optional(v.boolean()),
+        state: v.literal("approval-requested"),
+        input: v.any(),
+        callProviderMetadata: v.optional(v.record(v.string(), v.record(v.string(), v.any()))),
+        approval: v.object({
+            id: v.string()
+        })
+    }),
+    // approval-responded state
+    v.object({
+        type: v.literal("dynamic-tool"),
+        toolName: v.string(),
+        toolCallId: v.string(),
+        title: v.optional(v.string()),
+        providerExecuted: v.optional(v.boolean()),
+        state: v.literal("approval-responded"),
+        input: v.any(),
+        callProviderMetadata: v.optional(v.record(v.string(), v.record(v.string(), v.any()))),
+        approval: v.object({
+            id: v.string(),
+            approved: v.boolean(),
+            reason: v.optional(v.string())
+        })
+    }),
+    // output-available state
+    v.object({
+        type: v.literal("dynamic-tool"),
+        toolName: v.string(),
+        toolCallId: v.string(),
+        title: v.optional(v.string()),
+        providerExecuted: v.optional(v.boolean()),
+        state: v.literal("output-available"),
+        input: v.any(),
+        output: v.any(),
+        callProviderMetadata: v.optional(v.record(v.string(), v.record(v.string(), v.any()))),
+        preliminary: v.optional(v.boolean()),
+        approval: v.optional(
+            v.object({
+                id: v.string(),
+                approved: v.literal(true),
+                reason: v.optional(v.string())
+            })
+        )
+    }),
+    // output-error state
+    v.object({
+        type: v.literal("dynamic-tool"),
+        toolName: v.string(),
+        toolCallId: v.string(),
+        title: v.optional(v.string()),
+        providerExecuted: v.optional(v.boolean()),
+        state: v.literal("output-error"),
+        input: v.any(),
+        errorText: v.string(),
+        callProviderMetadata: v.optional(v.record(v.string(), v.record(v.string(), v.any()))),
+        approval: v.optional(
+            v.object({
+                id: v.string(),
+                approved: v.literal(true),
+                reason: v.optional(v.string())
+            })
+        )
+    }),
+    // output-denied state
+    v.object({
+        type: v.literal("dynamic-tool"),
+        toolName: v.string(),
+        toolCallId: v.string(),
+        title: v.optional(v.string()),
+        providerExecuted: v.optional(v.boolean()),
+        state: v.literal("output-denied"),
+        input: v.any(),
+        callProviderMetadata: v.optional(v.record(v.string(), v.record(v.string(), v.any()))),
+        approval: v.object({
+            id: v.string(),
+            approved: v.literal(false),
+            reason: v.optional(v.string())
+        })
+    })
+)
+
 export const MessagePart = v.union(
     TextPart,
     ImagePart,
@@ -61,4 +340,14 @@ export const MessagePart = v.union(
     FilePart,
     ErrorUIPart,
     ToolInvocationUIPart
+)
+
+export const MessagePartV2 = v.union(
+    TextPartV2,
+    ImagePartV2,
+    ReasoningPartV2,
+    FilePartV2,
+    ErrorUIPartV2,
+    ToolUIPartV2,
+    DynamicToolUIPartV2
 )

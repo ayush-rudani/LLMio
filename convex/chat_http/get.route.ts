@@ -1,5 +1,5 @@
 import { ChatError } from "@/lib/errors"
-import { createDataStream } from "ai"
+import { JsonToSseTransformStream, createUIMessageStream } from "ai"
 import type { Infer } from "convex/values"
 import { differenceInSeconds } from "date-fns"
 import { internal } from "../_generated/api"
@@ -10,7 +10,7 @@ import { getResumableStreamContext } from "../lib/resumable_stream_context"
 import type { Thread } from "../schema"
 import { RESPONSE_OPTS } from "./shared"
 
-export const chatGET = httpAction(async (ctx, req) => {
+export const chatGETV2 = httpAction(async (ctx, req) => {
     const streamContext = getResumableStreamContext()
     const resumeRequestedAt = new Date()
 
@@ -18,8 +18,17 @@ export const chatGET = httpAction(async (ctx, req) => {
         return new Response(null, { status: 204 })
     }
 
-    const { searchParams } = new URL(req.url)
-    const threadId = searchParams.get("chatId")
+    const url = new URL(req.url)
+    const pathParts = url.pathname.split("/").filter(Boolean)
+
+    let threadId: string | null = null
+    if (pathParts.length >= 3 && pathParts[0] === "chat" && pathParts[2] === "stream") {
+        // New AI SDK 5 pattern: /chat/{chatId}/stream
+        threadId = pathParts[1]
+    } else {
+        // Fallback to query parameter pattern: /chat?chatId=xxx
+        threadId = url.searchParams.get("chatId")
+    }
     if (!threadId) return new ChatError("bad_request:api").toResponse()
 
     const session = await getUserIdentity(ctx.auth, { allowAnons: false })
@@ -50,11 +59,13 @@ export const chatGET = httpAction(async (ctx, req) => {
 
     if (!recentStreamId) return new ChatError("not_found:stream").toResponse()
 
-    const emptyDataStream = createDataStream({
+    const emptyDataStream = createUIMessageStream({
         execute: () => {}
     })
 
-    const stream = await streamContext.resumableStream(recentStreamId._id, () => emptyDataStream)
+    const stream = await streamContext.resumableStream(recentStreamId._id, () =>
+        emptyDataStream.pipeThrough(new JsonToSseTransformStream())
+    )
 
     /*
      * For when the generation is streaming during SSR
@@ -67,29 +78,50 @@ export const chatGET = httpAction(async (ctx, req) => {
         const mostRecentMessage = messages.at(-1)
 
         if (!mostRecentMessage) {
-            return new Response(emptyDataStream.pipeThrough(new TextEncoderStream()), RESPONSE_OPTS)
+            return new Response(
+                emptyDataStream
+                    .pipeThrough(new JsonToSseTransformStream())
+                    .pipeThrough(new TextEncoderStream()),
+                RESPONSE_OPTS
+            )
         }
 
         if (mostRecentMessage.role !== "assistant") {
-            return new Response(emptyDataStream.pipeThrough(new TextEncoderStream()), RESPONSE_OPTS)
+            return new Response(
+                emptyDataStream
+                    .pipeThrough(new JsonToSseTransformStream())
+                    .pipeThrough(new TextEncoderStream()),
+                RESPONSE_OPTS
+            )
         }
 
         const messageCreatedAt = new Date(mostRecentMessage.createdAt)
 
         if (differenceInSeconds(resumeRequestedAt, messageCreatedAt) > 15) {
-            return new Response(emptyDataStream.pipeThrough(new TextEncoderStream()), RESPONSE_OPTS)
+            return new Response(
+                emptyDataStream
+                    .pipeThrough(new JsonToSseTransformStream())
+                    .pipeThrough(new TextEncoderStream()),
+                RESPONSE_OPTS
+            )
         }
 
-        const restoredStream = createDataStream({
-            execute: (buffer) => {
-                buffer.writeData({
-                    type: "append-message",
-                    message: JSON.stringify(mostRecentMessage)
+        const restoredStream = createUIMessageStream({
+            execute: ({ writer }) => {
+                writer.write({
+                    type: "data-append_message",
+                    id: "append_message",
+                    data: JSON.stringify(mostRecentMessage)
                 })
             }
         })
 
-        return new Response(restoredStream.pipeThrough(new TextEncoderStream()), RESPONSE_OPTS)
+        return new Response(
+            restoredStream
+                .pipeThrough(new JsonToSseTransformStream())
+                .pipeThrough(new TextEncoderStream()),
+            RESPONSE_OPTS
+        )
     }
 
     return new Response(stream.pipeThrough(new TextEncoderStream()), RESPONSE_OPTS)

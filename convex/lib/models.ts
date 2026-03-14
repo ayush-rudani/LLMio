@@ -3,7 +3,7 @@ import { createFal } from "@ai-sdk/fal"
 import { createGoogleGenerativeAI } from "@ai-sdk/google"
 import { createGroq } from "@ai-sdk/groq"
 import { createOpenAI } from "@ai-sdk/openai"
-import type { ProviderV1 } from "@ai-sdk/provider"
+import type { ProviderV3 } from "@ai-sdk/provider"
 import { createOpenRouter } from "@openrouter/ai-sdk-provider"
 
 import type { ModelAbility } from "../schema/settings"
@@ -31,7 +31,7 @@ export type SharedModel<Abilities extends ModelAbility[] = ModelAbility[]> = {
     abilities: Abilities
     mode?: "text" | "image" | "speech-to-text"
     contextLength?: number
-    maxTokens?: number
+    maxOutputTokens?: number
     supportedImageSizes?: ImageSize[]
     customIcon?:
         | "stability-ai"
@@ -369,7 +369,7 @@ export const MODELS_SHARED: SharedModel[] = [
 export const createProvider = (
     providerId: CoreProvider | "openrouter" | "fal",
     apiKey: string | "internal"
-): Omit<ProviderV1, "textEmbeddingModel"> => {
+): Omit<ProviderV3, "textEmbeddingModel"> => {
     if (apiKey !== "internal" && (!apiKey || apiKey.trim() === "")) {
         throw new Error("API key is required for non-internal providers")
     }
@@ -377,8 +377,7 @@ export const createProvider = (
     switch (providerId) {
         case "openai":
             return createOpenAI({
-                apiKey: apiKey === "internal" ? process.env.OPENAI_API_KEY : apiKey,
-                compatibility: "strict"
+                apiKey: apiKey === "internal" ? process.env.OPENAI_API_KEY : apiKey
             })
         case "anthropic":
             return createAnthropic({
@@ -395,11 +394,11 @@ export const createProvider = (
         case "openrouter":
             return createOpenRouter({
                 apiKey
-            })
+            }) as unknown as Omit<ProviderV3, "textEmbeddingModel">
         case "fal":
             return createFal({
                 apiKey: apiKey === "internal" ? process.env.FAL_API_KEY : apiKey
-            })
+            }) as unknown as Omit<ProviderV3, "textEmbeddingModel">
         default: {
             const exhaustiveCheck: never = providerId
             throw new Error(`Unknown provider: ${exhaustiveCheck}`)

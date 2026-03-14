@@ -13,7 +13,7 @@ import { action, internalMutation, internalQuery, mutation, query } from "./_gen
 import { aggregrateThreadsByFolder } from "./aggregates"
 import { getUserIdentity } from "./lib/identity"
 import type { Thread } from "./schema"
-import { HTTPAIMessage, type Message } from "./schema/message"
+import { HTTPAIMessageV2, type MessageV2 } from "./schema/message"
 
 export const getThreadById = internalQuery({
     args: { threadId: v.id("threads") },
@@ -28,7 +28,7 @@ export const createThreadOrInsertMessages = internalMutation({
     args: {
         threadId: v.optional(v.string()),
         authorId: v.string(),
-        userMessage: v.optional(HTTPAIMessage),
+        userMessage: v.optional(HTTPAIMessageV2),
         proposedNewAssistantId: v.string(),
         targetFromMessageId: v.optional(v.string()),
         targetMode: v.optional(v.union(v.literal("normal"), v.literal("edit"), v.literal("retry"))),
@@ -460,7 +460,7 @@ export const shareThread = action({
         }
 
         // Get all messages for the thread
-        const messages: Infer<typeof Message>[] = await ctx.runQuery(
+        const messages: Infer<typeof MessageV2>[] = await ctx.runQuery(
             internal.messages.getMessagesByThreadId,
             { threadId }
         )
