@@ -1,6 +1,6 @@
 import { ChatError } from "@/lib/errors"
 import { type OpenAIProvider, createOpenAI } from "@ai-sdk/openai"
-import type { ImageModelV1, LanguageModelV1 } from "@ai-sdk/provider"
+import type { ImageModel, LanguageModel } from "ai"
 import { internal } from "../_generated/api"
 import type { ActionCtx } from "../_generated/server"
 import { getUserIdentity } from "../lib/identity"
@@ -36,7 +36,7 @@ export const getModel = async (ctx: ActionCtx, modelId: string) => {
     })
 
     console.log("[getModel] model", model, "sortedAdapters", sortedAdapters)
-    let finalModel: LanguageModelV1 | ImageModelV1 | undefined = undefined
+    let finalModel: LanguageModel | ImageModel | undefined = undefined
 
     for (const adapter of sortedAdapters) {
         const providerIdRaw = model.customProviderId ?? adapter.split(":")[0]
@@ -103,7 +103,6 @@ export const getModel = async (ctx: ActionCtx, modelId: string) => {
         const sdk_provider = createOpenAI({
             baseURL: provider.endpoint,
             apiKey: provider.key,
-            compatibility: "compatible",
             name: provider.name
         })
         if (model.mode === "image") {
@@ -120,14 +119,15 @@ export const getModel = async (ctx: ActionCtx, modelId: string) => {
 
     if (!finalModel) return new ChatError("bad_model:api")
 
-    Object.assign(finalModel, {
-        modelType: "maxImagesPerCall" in finalModel ? "image" : "text"
-    })
+    // finalModel is always an object (model instance), not a string
+    // The string type in LanguageModel union is for model IDs passed to providers
+    const modelObj = finalModel as object & { modelType?: "text" | "image" }
+    modelObj.modelType = "maxImagesPerCall" in modelObj ? "image" : "text"
 
     return {
-        model: finalModel as
-            | (LanguageModelV1 & { modelType: "text" })
-            | (ImageModelV1 & { modelType: "image" }),
+        model: modelObj as
+            | (LanguageModel & { modelType: "text" })
+            | (ImageModel & { modelType: "image" }),
         abilities: model.abilities,
         registry,
         modelId: model.id,

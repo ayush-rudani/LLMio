@@ -3,8 +3,8 @@ import { createFal } from "@ai-sdk/fal"
 import { createGoogleGenerativeAI } from "@ai-sdk/google"
 import { createGroq } from "@ai-sdk/groq"
 import { createOpenAI } from "@ai-sdk/openai"
-import type { ProviderV1 } from "@ai-sdk/provider"
 import { createOpenRouter } from "@openrouter/ai-sdk-provider"
+import type { ImageModel, LanguageModel } from "ai"
 
 import type { ModelAbility } from "../schema/settings"
 
@@ -366,10 +366,18 @@ export const MODELS_SHARED: SharedModel[] = [
     }
 ] as const
 
+// Custom provider interface that works across different provider versions
+// Using any for model return types due to version mismatches between provider packages
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface ChatProvider {
+    languageModel: (modelId: string) => LanguageModel | any
+    imageModel?: (modelId: string) => ImageModel | any
+}
+
 export const createProvider = (
     providerId: CoreProvider | "openrouter" | "fal",
     apiKey: string | "internal"
-): Omit<ProviderV1, "textEmbeddingModel"> => {
+): ChatProvider => {
     if (apiKey !== "internal" && (!apiKey || apiKey.trim() === "")) {
         throw new Error("API key is required for non-internal providers")
     }
@@ -377,8 +385,7 @@ export const createProvider = (
     switch (providerId) {
         case "openai":
             return createOpenAI({
-                apiKey: apiKey === "internal" ? process.env.OPENAI_API_KEY : apiKey,
-                compatibility: "strict"
+                apiKey: apiKey === "internal" ? process.env.OPENAI_API_KEY : apiKey
             })
         case "anthropic":
             return createAnthropic({

@@ -1,12 +1,12 @@
 import { R2 } from "@convex-dev/r2"
 import type {
     AssistantContent,
-    CoreAssistantMessage,
-    CoreToolMessage,
-    CoreUserMessage,
+    AssistantModelMessage,
     ToolCallPart,
     ToolContent,
-    UserContent
+    ToolModelMessage,
+    UserContent,
+    UserModelMessage
 } from "ai"
 import type { Infer } from "convex/values"
 import { components } from "../_generated/api"
@@ -14,7 +14,7 @@ import type { Message } from "../schema/message"
 import type { ModelAbility } from "../schema/settings"
 import { getFileTypeInfo, isImageMimeType } from "./file_constants"
 
-export type CoreMessage = (CoreAssistantMessage | CoreToolMessage | CoreUserMessage) & {
+export type CoreMessage = (AssistantModelMessage | ToolModelMessage | UserModelMessage) & {
     messageId: string
 }
 const r2 = new R2(components.r2)
@@ -25,7 +25,7 @@ export const dbMessagesToCore = async (
 ): Promise<CoreMessage[]> => {
     const mapped_messages: CoreMessage[] = []
     for await (const message of messages) {
-        const to_commit_messages: ((CoreAssistantMessage | CoreToolMessage | CoreUserMessage) & {
+        const to_commit_messages: ((AssistantModelMessage | ToolModelMessage | UserModelMessage) & {
             messageId: string
         })[] = []
         if (message.role === "user") {
@@ -106,7 +106,7 @@ export const dbMessagesToCore = async (
                                 const blob = await data.blob()
                                 mapped_content.push({
                                     type: "file",
-                                    mimeType: "application/pdf",
+                                    mediaType: "application/pdf",
                                     filename: filename,
                                     data: await blob.arrayBuffer()
                                 })
@@ -166,14 +166,14 @@ export const dbMessagesToCore = async (
                         const blob = await data.blob()
                         mapped_content.push({
                             type: "file",
-                            mimeType: p.mimeType || "image/png",
+                            mediaType: p.mimeType || "image/png",
                             filename: p.filename || "",
                             data: await blob.arrayBuffer()
                         })
                     } else {
                         mapped_content.push({
                             type: "file",
-                            mimeType: p.mimeType || "application/octet-stream",
+                            mediaType: p.mimeType || "application/octet-stream",
                             filename: p.filename || "",
                             data: p.data || ""
                         })
@@ -183,14 +183,14 @@ export const dbMessagesToCore = async (
                         type: "tool-call",
                         toolCallId: p.toolInvocation.toolCallId,
                         toolName: p.toolInvocation.toolName,
-                        args: p.toolInvocation.args
+                        input: p.toolInvocation.args
                     })
                     // Collect tool results separately
                     tool_results.push({
                         type: "tool-result",
                         toolCallId: p.toolInvocation.toolCallId,
                         toolName: p.toolInvocation.toolName,
-                        result: p.toolInvocation.result
+                        output: p.toolInvocation.result
                     })
                 } else if (p.type === "reasoning") {
                     mapped_content.push({

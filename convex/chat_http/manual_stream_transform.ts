@@ -1,50 +1,57 @@
-import type {
-    DataStreamString,
-    FileUIPart,
-    ReasoningUIPart,
-    TextUIPart,
-    ToolInvocationUIPart
-} from "@ai-sdk/ui-utils"
+import type { ToolInvocationUIPart } from "@ai-sdk/ui-utils"
 
 import { DelayedPromise } from "@/lib/delayed-promise"
-import { type TextStreamPart, type ToolCall, formatDataStreamPart } from "ai"
+import type { TextStreamPart, ToolSet, UIMessageChunk } from "ai"
 import type { GenericActionCtx } from "convex/server"
 import type { Infer } from "convex/values"
+import { nanoid } from "nanoid"
 import type { DataModel } from "../_generated/dataModel"
 import { r2 } from "../attachments"
-import type { ErrorUIPart } from "../schema/parts"
+import type { ErrorUIPart, FilePart, ReasoningPart, TextPart } from "../schema/parts"
+
+// Custom data types for our app
+type AppDataTypes = {
+    thread_id: { type: "thread_id"; content: string }
+    stream_id: { type: "stream_id"; content: string }
+    model_name: { type: "model_name"; content: string }
+}
+
+export type AppUIMessageChunk = UIMessageChunk<unknown, AppDataTypes>
+
+// Database-compatible part types (matches Convex schema)
+export type DbPart =
+    | Infer<typeof TextPart>
+    | Infer<typeof ReasoningPart>
+    | ToolInvocationUIPart
+    | Infer<typeof FilePart>
+    | Infer<typeof ErrorUIPart>
 
 export const manualStreamTransform = (
-    parts: Array<
-        | TextUIPart
-        | (ReasoningUIPart & { duration?: number })
-        | ToolInvocationUIPart
-        | FileUIPart
-        | Infer<typeof ErrorUIPart>
-    >,
+    parts: Array<DbPart>,
     totalTokenUsage: {
         promptTokens: number
         completionTokens: number
         reasoningTokens: number
     },
-    assistantMessageId: string,
+    _assistantMessageId: string,
     uploadPromises: Promise<void>[],
     userId: string,
     actionCtx: GenericActionCtx<DataModel>
 ) => {
     let reasoningStartedAt = -1
+    let currentTextId: string | null = null
+    let currentReasoningId: string | null = null
 
     const appendTextPart = (text: string, type: "text" | "reasoning") => {
         if (parts.length > 0 && parts[parts.length - 1]?.type === type) {
             if (type === "text") {
-                ;(parts[parts.length - 1] as TextUIPart).text += text
+                // Database schema uses 'text' property
+                ;(parts[parts.length - 1] as Infer<typeof TextPart>).text += text
             } else if (type === "reasoning") {
-                ;(parts[parts.length - 1] as ReasoningUIPart).reasoning += text
-                ;(
-                    parts[parts.length - 1] as ReasoningUIPart & {
-                        duration?: number
-                    }
-                ).duration = Date.now() - reasoningStartedAt
+                // Database schema uses 'reasoning' property (not 'text')
+                ;(parts[parts.length - 1] as Infer<typeof ReasoningPart>).reasoning += text
+                ;(parts[parts.length - 1] as Infer<typeof ReasoningPart>).duration =
+                    Date.now() - reasoningStartedAt
             }
         } else {
             if (type === "text") {
@@ -56,132 +63,200 @@ export const manualStreamTransform = (
                 if (reasoningStartedAt === -1) {
                     reasoningStartedAt = Date.now()
                 }
+                // Database schema uses 'reasoning' property
                 parts.push({
                     type: "reasoning",
                     reasoning: text,
-                    details: []
+                    duration: 0
                 })
             }
         }
     }
 
-    return new TransformStream<TextStreamPart<any>, DataStreamString>({
+    return new TransformStream<TextStreamPart<ToolSet>, AppUIMessageChunk>({
         transform: async (chunk, controller) => {
             const chunkType = chunk.type
             switch (chunkType) {
+                case "text-start": {
+                    currentTextId = nanoid()
+                    controller.enqueue({
+                        type: "text-start",
+                        id: currentTextId
+                    })
+                    break
+                }
+
                 case "text-delta": {
-                    controller.enqueue(formatDataStreamPart("text", chunk.textDelta))
-                    appendTextPart(chunk.textDelta, "text")
-                    break
-                }
-
-                case "reasoning": {
-                    controller.enqueue(formatDataStreamPart("reasoning", chunk.textDelta))
-                    appendTextPart(chunk.textDelta, "reasoning")
-                    break
-                }
-
-                case "redacted-reasoning": {
-                    controller.enqueue(
-                        formatDataStreamPart("redacted_reasoning", {
-                            data: chunk.data
+                    if (!currentTextId) {
+                        currentTextId = nanoid()
+                        controller.enqueue({
+                            type: "text-start",
+                            id: currentTextId
                         })
-                    )
-                    appendTextPart(chunk.data, "reasoning")
+                    }
+                    controller.enqueue({
+                        type: "text-delta",
+                        id: currentTextId,
+                        delta: chunk.text
+                    })
+                    appendTextPart(chunk.text, "text")
                     break
                 }
 
-                case "reasoning-signature": {
-                    controller.enqueue(
-                        formatDataStreamPart("reasoning_signature", {
-                            signature: chunk.signature
+                case "text-end": {
+                    if (currentTextId) {
+                        controller.enqueue({
+                            type: "text-end",
+                            id: currentTextId
                         })
-                    )
+                        currentTextId = null
+                    }
+                    break
+                }
+
+                case "reasoning-start": {
+                    if (reasoningStartedAt === -1) {
+                        reasoningStartedAt = Date.now()
+                    }
+                    currentReasoningId = nanoid()
+                    controller.enqueue({
+                        type: "reasoning-start",
+                        id: currentReasoningId
+                    })
+                    break
+                }
+
+                case "reasoning-delta": {
+                    if (!currentReasoningId) {
+                        currentReasoningId = nanoid()
+                        if (reasoningStartedAt === -1) {
+                            reasoningStartedAt = Date.now()
+                        }
+                        controller.enqueue({
+                            type: "reasoning-start",
+                            id: currentReasoningId
+                        })
+                    }
+                    controller.enqueue({
+                        type: "reasoning-delta",
+                        id: currentReasoningId,
+                        delta: chunk.text
+                    })
+                    appendTextPart(chunk.text, "reasoning")
+                    break
+                }
+
+                case "reasoning-end": {
+                    if (currentReasoningId) {
+                        controller.enqueue({
+                            type: "reasoning-end",
+                            id: currentReasoningId
+                        })
+                        currentReasoningId = null
+                    }
                     break
                 }
 
                 case "file": {
-                    if (chunk.mimeType.startsWith("image/")) {
+                    const file = chunk.file
+                    if (file.mediaType.startsWith("image/")) {
                         const promise = new DelayedPromise<void>()
                         uploadPromises.push(promise.value)
-                        const fileExtension = chunk.mimeType.split("/")[1] || "png"
+                        const fileExtension = file.mediaType.split("/")[1] || "png"
                         const key = `generations/${userId}/${Date.now()}-${crypto.randomUUID()}-gen.${fileExtension}`
-                        const uint8Array = Uint8Array.from(atob(chunk.base64), (c) =>
-                            c.charCodeAt(0)
-                        )
 
-                        const storedKey = await r2.store(actionCtx, uint8Array, {
+                        const storedKey = await r2.store(actionCtx, file.uint8Array, {
                             authorId: userId,
                             key,
-                            type: chunk.mimeType
+                            type: file.mediaType
                         })
 
                         console.log("Stored model-generated image to R2:", storedKey)
 
+                        // Database schema uses 'data' and 'mimeType' for FilePart
                         parts.push({
                             type: "file",
-                            mimeType: chunk.mimeType,
-                            data: storedKey
+                            data: storedKey,
+                            mimeType: file.mediaType
                         })
 
                         promise.resolve()
 
-                        controller.enqueue(
-                            formatDataStreamPart("file", {
-                                mimeType: chunk.mimeType,
-                                data: storedKey
-                            })
-                        )
+                        // Stream uses v6 format with 'url' and 'mediaType'
+                        controller.enqueue({
+                            type: "file",
+                            mediaType: file.mediaType,
+                            url: storedKey
+                        })
                     } else {
-                        controller.enqueue(
-                            formatDataStreamPart("file", {
-                                mimeType: chunk.mimeType,
-                                data: chunk.base64
-                            })
-                        )
+                        controller.enqueue({
+                            type: "file",
+                            mediaType: file.mediaType,
+                            url: file.base64
+                        })
                     }
                     break
                 }
 
                 case "source": {
-                    controller.enqueue(formatDataStreamPart("source", chunk.source))
+                    // In v6, source chunk has sourceType property
+                    if (chunk.sourceType === "url") {
+                        controller.enqueue({
+                            type: "source-url",
+                            sourceId: chunk.id,
+                            url: chunk.url,
+                            title: chunk.title
+                        })
+                    } else if (chunk.sourceType === "document") {
+                        controller.enqueue({
+                            type: "source-document",
+                            sourceId: chunk.id,
+                            mediaType: chunk.mediaType,
+                            title: chunk.title
+                        })
+                    }
                     break
                 }
 
-                case "tool-call-streaming-start": {
-                    controller.enqueue(
-                        formatDataStreamPart("tool_call_streaming_start", {
-                            toolCallId: chunk.toolCallId,
-                            toolName: chunk.toolName
-                        })
-                    )
+                case "tool-input-start": {
+                    controller.enqueue({
+                        type: "tool-input-start",
+                        toolCallId: chunk.id,
+                        toolName: chunk.toolName
+                    })
                     break
                 }
 
-                case "tool-call-delta": {
-                    controller.enqueue(
-                        formatDataStreamPart("tool_call_delta", {
-                            toolCallId: chunk.toolCallId,
-                            argsTextDelta: chunk.argsTextDelta
-                        })
-                    )
+                case "tool-input-delta": {
+                    controller.enqueue({
+                        type: "tool-input-delta",
+                        toolCallId: chunk.id,
+                        inputTextDelta: chunk.delta
+                    })
+                    break
+                }
+
+                case "tool-input-end": {
+                    // End of tool input streaming - no specific chunk type needed
                     break
                 }
 
                 case "tool-call": {
-                    controller.enqueue(
-                        formatDataStreamPart("tool_call", {
-                            toolCallId: chunk.toolCallId,
-                            toolName: chunk.toolName,
-                            args: chunk.args
-                        } as ToolCall<string, any>)
-                    )
+                    // In v6, tool calls use 'input' instead of 'args'
+                    const toolInput = chunk.input
+
+                    controller.enqueue({
+                        type: "tool-input-available",
+                        toolCallId: chunk.toolCallId,
+                        toolName: chunk.toolName,
+                        input: toolInput
+                    })
 
                     parts.push({
                         type: "tool-invocation",
                         toolInvocation: {
                             state: "call",
-                            args: chunk.args,
+                            args: toolInput,
                             toolCallId: chunk.toolCallId,
                             toolName: chunk.toolName
                         }
@@ -190,12 +265,14 @@ export const manualStreamTransform = (
                 }
 
                 case "tool-result": {
-                    controller.enqueue(
-                        formatDataStreamPart("tool_result", {
-                            toolCallId: chunk.toolCallId,
-                            result: chunk.result
-                        })
-                    )
+                    // In v6, tool results use 'output' instead of 'result'
+                    const toolOutput = chunk.output
+
+                    controller.enqueue({
+                        type: "tool-output-available",
+                        toolCallId: chunk.toolCallId,
+                        output: toolOutput
+                    })
 
                     const found = parts.findIndex(
                         (p) =>
@@ -205,9 +282,51 @@ export const manualStreamTransform = (
                     if (found !== -1) {
                         const _part = parts[found] as ToolInvocationUIPart
                         _part.toolInvocation.state = "result"
-                        ;(_part.toolInvocation as any).result = chunk.result
+                        ;(
+                            _part.toolInvocation as ToolInvocationUIPart["toolInvocation"] & {
+                                result: unknown
+                            }
+                        ).result = toolOutput
                     }
 
+                    break
+                }
+
+                case "tool-error": {
+                    // Handle tool execution errors
+                    const errorChunk = chunk as { toolCallId: string; error: unknown }
+                    console.error(`[cvx][chat][stream] Tool error: ${errorChunk.error}`)
+
+                    controller.enqueue({
+                        type: "tool-output-error",
+                        toolCallId: errorChunk.toolCallId,
+                        errorText:
+                            typeof errorChunk.error === "string"
+                                ? errorChunk.error
+                                : String(errorChunk.error)
+                    })
+                    break
+                }
+
+                case "tool-output-denied": {
+                    // Handle tool output denied
+                    const deniedChunk = chunk as { toolCallId: string }
+                    console.log("[cvx][chat][stream] Tool output denied")
+                    controller.enqueue({
+                        type: "tool-output-denied",
+                        toolCallId: deniedChunk.toolCallId
+                    })
+                    break
+                }
+
+                case "tool-approval-request": {
+                    // Handle tool approval requests
+                    console.log("[cvx][chat][stream] Tool approval request")
+                    controller.enqueue({
+                        type: "tool-approval-request",
+                        approvalId: chunk.approvalId || nanoid(),
+                        toolCallId: chunk.toolCall.toolCallId
+                    })
                     break
                 }
 
@@ -219,13 +338,15 @@ export const manualStreamTransform = (
                         error_message = chunk.error
                     } else if (chunk.error instanceof Error) {
                         error_message = chunk.error.message
-                    } else if ("error" in (chunk.error as any)) {
+                    } else if (
+                        chunk.error &&
+                        typeof chunk.error === "object" &&
+                        "error" in chunk.error
+                    ) {
                         if ((chunk.error as { error: Error }).error instanceof Error) {
                             error_message = (chunk.error as { error: Error }).error.message
                         } else {
-                            error_message = (
-                                chunk.error as { error: { error: any } }
-                            ).error.error.toString()
+                            error_message = String((chunk.error as { error: unknown }).error)
                         }
                     }
 
@@ -236,32 +357,26 @@ export const manualStreamTransform = (
                             message: error_message
                         }
                     })
-                    controller.enqueue(formatDataStreamPart("error", error_message))
+                    controller.enqueue({
+                        type: "error",
+                        errorText: error_message
+                    })
                     break
                 }
 
-                case "step-start": {
-                    controller.enqueue(
-                        formatDataStreamPart("start_step", {
-                            messageId: assistantMessageId
-                        })
-                    )
+                case "start-step": {
+                    controller.enqueue({
+                        type: "start-step"
+                    })
                     break
                 }
 
-                case "step-finish": {
-                    controller.enqueue(
-                        formatDataStreamPart("finish_step", {
-                            finishReason: chunk.finishReason,
-                            usage: {
-                                promptTokens: chunk.usage.promptTokens,
-                                completionTokens: chunk.usage.completionTokens
-                            },
-                            isContinued: chunk.isContinued
-                        })
-                    )
-                    totalTokenUsage.promptTokens += chunk.usage.promptTokens || 0
-                    totalTokenUsage.completionTokens += chunk.usage.completionTokens || 0
+                case "finish-step": {
+                    controller.enqueue({
+                        type: "finish-step"
+                    })
+                    totalTokenUsage.promptTokens += chunk.usage.inputTokens || 0
+                    totalTokenUsage.completionTokens += chunk.usage.outputTokens || 0
 
                     console.log(
                         "chunk.providerMetadata",
@@ -279,13 +394,22 @@ export const manualStreamTransform = (
                     break
                 }
 
-                case "finish": {
+                case "start":
+                case "finish":
+                case "abort": {
+                    // Stream lifecycle events, no action needed
+                    break
+                }
+
+                case "raw": {
+                    // Raw provider values, usually for debugging
                     break
                 }
 
                 default: {
-                    const exhaustiveCheck: never = chunkType
-                    throw new Error(`Unknown chunk type: ${exhaustiveCheck}`)
+                    // Handle any unknown chunk types gracefully
+                    const unknownChunk = chunk as { type: string }
+                    console.warn(`[cvx][chat][stream] Unhandled chunk type: ${unknownChunk.type}`)
                 }
             }
         }

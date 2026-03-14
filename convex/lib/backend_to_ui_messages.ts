@@ -1,11 +1,13 @@
-import type { Message as AIUIMessage } from "ai"
+import type { UIMessage } from "ai"
 import type { Infer } from "convex/values"
 import type { Message } from "../schema"
 import type { AIMessage } from "../schema/message"
 
-type AIUIMessageWithParts = Omit<AIUIMessage, "parts"> & {
-    parts: NonNullable<AIUIMessage["parts"]>
+// Extended UIMessage with metadata from our database schema
+// Also includes 'content' for compatibility with useChat's Message type
+type AIUIMessageWithParts = UIMessage & {
     metadata?: Infer<typeof AIMessage>["metadata"]
+    content: string
 }
 
 export const backendToUiMessages = (messages: Infer<typeof Message>[]): AIUIMessageWithParts[] => {
@@ -14,13 +16,19 @@ export const backendToUiMessages = (messages: Infer<typeof Message>[]): AIUIMess
     }
 
     const result = messages.map((message) => {
+        // Extract text content from parts for compatibility with useChat Message type
+        const parts = (message.parts as unknown as UIMessage["parts"]) ?? []
+        const textContent = parts
+            .filter((part): part is { type: "text"; text: string } => part.type === "text")
+            .map((part) => part.text)
+            .join("")
+
         const uiMessage: AIUIMessageWithParts = {
             metadata: message.metadata,
             id: message.messageId,
             role: message.role,
-            createdAt: new Date(message.createdAt),
-            content: message.parts?.find((p) => p.type === "text")?.text || "",
-            parts: (message.parts as unknown as NonNullable<AIUIMessage["parts"]>) ?? []
+            parts,
+            content: textContent
         }
         return uiMessage
     })

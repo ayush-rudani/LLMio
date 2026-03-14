@@ -1,5 +1,5 @@
 import { ChatError } from "@/lib/errors"
-import { createDataStream } from "ai"
+import { JsonToSseTransformStream, UI_MESSAGE_STREAM_HEADERS, createUIMessageStream } from "ai"
 import type { Infer } from "convex/values"
 import { differenceInSeconds } from "date-fns"
 import { internal } from "../_generated/api"
@@ -8,7 +8,6 @@ import { httpAction } from "../_generated/server"
 import { getUserIdentity } from "../lib/identity"
 import { getResumableStreamContext } from "../lib/resumable_stream_context"
 import type { Thread } from "../schema"
-import { RESPONSE_OPTS } from "./shared"
 
 export const chatGET = httpAction(async (ctx, req) => {
     const streamContext = getResumableStreamContext()
@@ -50,11 +49,12 @@ export const chatGET = httpAction(async (ctx, req) => {
 
     if (!recentStreamId) return new ChatError("not_found:stream").toResponse()
 
-    const emptyDataStream = createDataStream({
+    // Create an empty UI message stream
+    const emptyStream = createUIMessageStream({
         execute: () => {}
-    })
+    }).pipeThrough(new JsonToSseTransformStream())
 
-    const stream = await streamContext.resumableStream(recentStreamId._id, () => emptyDataStream)
+    const stream = await streamContext.resumableStream(recentStreamId._id, () => emptyStream)
 
     /*
      * For when the generation is streaming during SSR
@@ -67,30 +67,39 @@ export const chatGET = httpAction(async (ctx, req) => {
         const mostRecentMessage = messages.at(-1)
 
         if (!mostRecentMessage) {
-            return new Response(emptyDataStream.pipeThrough(new TextEncoderStream()), RESPONSE_OPTS)
+            return new Response(emptyStream, { headers: UI_MESSAGE_STREAM_HEADERS })
         }
 
         if (mostRecentMessage.role !== "assistant") {
-            return new Response(emptyDataStream.pipeThrough(new TextEncoderStream()), RESPONSE_OPTS)
+            return new Response(emptyStream, { headers: UI_MESSAGE_STREAM_HEADERS })
         }
 
         const messageCreatedAt = new Date(mostRecentMessage.createdAt)
 
         if (differenceInSeconds(resumeRequestedAt, messageCreatedAt) > 15) {
-            return new Response(emptyDataStream.pipeThrough(new TextEncoderStream()), RESPONSE_OPTS)
+            return new Response(emptyStream, { headers: UI_MESSAGE_STREAM_HEADERS })
         }
 
-        const restoredStream = createDataStream({
-            execute: (buffer) => {
-                buffer.writeData({
-                    type: "append-message",
-                    message: JSON.stringify(mostRecentMessage)
+        // Create a stream with the restored message data
+        const restoredStream = createUIMessageStream({
+            execute: ({ writer }) => {
+                // Write the restored message as a data chunk
+                writer.write({
+                    type: "data-append_message" as const,
+                    data: {
+                        type: "append-message",
+                        message: JSON.stringify(mostRecentMessage)
+                    }
+                } as any) // Using any due to custom data type
+                writer.write({
+                    type: "finish",
+                    finishReason: "stop"
                 })
             }
-        })
+        }).pipeThrough(new JsonToSseTransformStream())
 
-        return new Response(restoredStream.pipeThrough(new TextEncoderStream()), RESPONSE_OPTS)
+        return new Response(restoredStream, { headers: UI_MESSAGE_STREAM_HEADERS })
     }
 
-    return new Response(stream.pipeThrough(new TextEncoderStream()), RESPONSE_OPTS)
+    return new Response(stream, { headers: UI_MESSAGE_STREAM_HEADERS })
 })

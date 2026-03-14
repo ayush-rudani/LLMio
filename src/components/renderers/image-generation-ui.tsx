@@ -1,20 +1,46 @@
 import { ImageSkeleton } from "@/components/ui/image-skeleton"
 import { MODELS_SHARED } from "@/convex/lib/models"
 import { browserEnv } from "@/lib/browser-env"
-import type { ToolInvocation } from "ai"
 import { AlertCircle } from "lucide-react"
 import { memo, useMemo, useState } from "react"
 
+// Tool invocation type for AI SDK v6
+type ToolInvocationType = {
+    toolCallId: string
+    toolName: string
+    state:
+        | "partial-call"
+        | "call"
+        | "result"
+        | "input-streaming"
+        | "input-available"
+        | "output-streaming"
+        | "output-available"
+        | "error"
+    args?: Record<string, unknown>
+    input?: unknown
+    result?: {
+        error?: string
+        assets?: Array<{ imageUrl?: string }>
+        prompt?: string
+        modelId?: string
+    }
+    output?: unknown
+}
+
 export const ImageGenerationToolRenderer = memo(
-    ({ toolInvocation }: { toolInvocation: ToolInvocation }) => {
+    ({ toolInvocation }: { toolInvocation: ToolInvocationType }) => {
         if (toolInvocation.toolName !== "image_generation") return null
 
         const isLoading = toolInvocation.state === "partial-call" || toolInvocation.state === "call"
-        const hasResult = toolInvocation.state === "result" && toolInvocation.result
-        const hasError = hasResult && "error" in toolInvocation.result
+        const hasResult = toolInvocation.state === "result" && !!toolInvocation.result
+        const hasError = hasResult && toolInvocation.result && "error" in toolInvocation.result
 
         // Extract aspect ratio from args to determine container dimensions
-        const aspectRatio = toolInvocation.args?.imageSize || "1:1"
+        const aspectRatio =
+            typeof toolInvocation.args?.imageSize === "string"
+                ? toolInvocation.args.imageSize
+                : "1:1"
 
         // Convert aspect ratio to CSS aspect-ratio value
         const cssAspectRatio = useMemo(() => {
@@ -76,7 +102,7 @@ export const ImageGenerationToolRenderer = memo(
             )
         }
 
-        if (hasError) {
+        if (hasError && toolInvocation.result) {
             return (
                 <div
                     className="flex w-full max-w-md flex-col items-center justify-center rounded-xl border border-destructive/50 bg-destructive/10"
@@ -90,20 +116,24 @@ export const ImageGenerationToolRenderer = memo(
             )
         }
 
-        if (hasResult && toolInvocation.result.assets) {
+        if (hasResult && toolInvocation.result?.assets) {
             const assets = toolInvocation.result.assets
-            const prompt = toolInvocation.result.prompt || toolInvocation.args?.prompt
+            const prompt =
+                toolInvocation.result.prompt ||
+                (typeof toolInvocation.args?.prompt === "string"
+                    ? toolInvocation.args.prompt
+                    : undefined)
 
             const modelName = toolInvocation.result.modelId
-                ? MODELS_SHARED.find((m) => m.id === toolInvocation.result.modelId)?.name
+                ? MODELS_SHARED.find((m) => m.id === toolInvocation.result?.modelId)?.name
                 : toolInvocation.result.modelId
 
             return assets.map((asset, index) => (
                 <ImageWithErrorHandler
                     key={index}
                     asset={asset}
-                    prompt={prompt}
-                    modelName={modelName}
+                    prompt={prompt || "Generated image"}
+                    modelName={modelName || ""}
                     cssAspectRatio={cssAspectRatio}
                 />
             ))

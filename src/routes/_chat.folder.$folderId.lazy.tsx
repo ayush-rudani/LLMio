@@ -8,7 +8,6 @@ import type { Id } from "@/convex/_generated/dataModel"
 import { MODELS_SHARED } from "@/convex/lib/models"
 import { useSession } from "@/hooks/auth-hooks"
 import { useChatActions } from "@/hooks/use-chat-actions"
-import { useChatDataProcessor } from "@/hooks/use-chat-data-processor"
 import { useChatIntegration } from "@/hooks/use-chat-integration"
 import { useDynamicTitle } from "@/hooks/use-dynamic-title"
 import { useThreadSync } from "@/hooks/use-thread-sync"
@@ -21,6 +20,7 @@ import { cn } from "@/lib/utils"
 import { Link } from "@tanstack/react-router"
 import { useLocation } from "@tanstack/react-router"
 import { createLazyFileRoute } from "@tanstack/react-router"
+import type { UIMessage } from "ai"
 import { format } from "date-fns"
 import { Clock, Pin } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
@@ -62,7 +62,7 @@ const FolderChat = ({ folderId }: FolderChatProps) => {
     const project =
         "error" in projects ? null : projects?.find((project) => project._id === folderId)
 
-    const { status, data, messages } = useChatIntegration({
+    const { status, messages } = useChatIntegration({
         threadId,
         folderId
     })
@@ -71,8 +71,6 @@ const FolderChat = ({ folderId }: FolderChatProps) => {
         threadId,
         folderId
     })
-
-    useChatDataProcessor({ data, messages })
 
     const handleInputSubmitWithScroll = (inputValue?: string, fileValues?: UploadedFile[]) => {
         handleInputSubmit(inputValue, fileValues)
@@ -216,7 +214,7 @@ const FolderChat = ({ folderId }: FolderChatProps) => {
             )}
         >
             <Messages
-                messages={messages}
+                messages={messages as UIMessage[]}
                 onRetry={handleRetry}
                 onEditAndRetry={handleEditAndRetry}
                 status={status}
