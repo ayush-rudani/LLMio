@@ -27,8 +27,8 @@ export const AIMessage = v.object({
     metadata: v.object({
         modelId: v.optional(v.string()),
         modelName: v.optional(v.string()),
-        promptTokens: v.optional(v.number()),
-        completionTokens: v.optional(v.number()),
+        inputTokens: v.optional(v.number()),
+        outputTokens: v.optional(v.number()),
         reasoningTokens: v.optional(v.number()),
         serverDurationMs: v.optional(v.number())
     })
@@ -44,8 +44,8 @@ export const Message = v.object({
     metadata: v.object({
         modelId: v.optional(v.string()),
         modelName: v.optional(v.string()),
-        promptTokens: v.optional(v.number()),
-        completionTokens: v.optional(v.number()),
+        inputTokens: v.optional(v.number()),
+        outputTokens: v.optional(v.number()),
         reasoningTokens: v.optional(v.number()),
         serverDurationMs: v.optional(v.number())
     })

@@ -54,7 +54,7 @@ export const CustomModel = v.object({
     modelId: v.string(),
     providerId: v.union(CoreProvidersSchema, v.string()),
     contextLength: v.number(),
-    maxTokens: v.number(),
+    maxOutputTokens: v.number(),
     abilities: v.array(ModelAbilitySchema)
 })
 

@@ -1,7 +1,29 @@
 import { cn } from "@/lib/utils"
-import type { ToolInvocation } from "ai"
 import { ChevronDown, ExternalLink, Globe, Loader2 } from "lucide-react"
 import { memo, useEffect, useRef, useState } from "react"
+
+// Custom type to match our DB schema (v4-compatible format)
+type WebSearchArgs = {
+    query?: string
+}
+
+type WebSearchResult = {
+    results: Array<{
+        title: string
+        url: string
+        description?: string
+        snippet?: string
+    }>
+}
+
+// General type for tool invocations passed from messages.tsx
+type GenericDBToolInvocation = {
+    state: "call" | "result" | "partial-call"
+    args?: unknown
+    result?: unknown
+    toolCallId: string
+    toolName: string
+}
 
 function getFaviconUrl(url: string): string {
     try {
@@ -46,7 +68,7 @@ const FaviconWithLoader = memo(({ url }: { url: string }) => {
 })
 
 export const WebSearchToolRenderer = memo(
-    ({ toolInvocation }: { toolInvocation: ToolInvocation }) => {
+    ({ toolInvocation }: { toolInvocation: GenericDBToolInvocation }) => {
         const [isExpanded, setIsExpanded] = useState(false)
         const contentRef = useRef<HTMLDivElement>(null)
         const innerRef = useRef<HTMLDivElement>(null)
@@ -54,7 +76,8 @@ export const WebSearchToolRenderer = memo(
         if (toolInvocation.toolName !== "web_search") return null
 
         const isLoading = toolInvocation.state === "partial-call" || toolInvocation.state === "call"
-        const hasResults = toolInvocation.state === "result" && toolInvocation.result
+        const result = toolInvocation.result as WebSearchResult | undefined
+        const hasResults = toolInvocation.state === "result" && !!result
 
         useEffect(() => {
             if (!contentRef.current || !innerRef.current) return
@@ -107,20 +130,20 @@ export const WebSearchToolRenderer = memo(
                     </div>
 
                     {/* Query and results info */}
-                    {(toolInvocation.args?.query || hasResults) && (
+                    {((toolInvocation.args as WebSearchArgs | undefined)?.query || hasResults) && (
                         <div className="flex items-center gap-2 md:ml-auto">
                             <div className="flex items-center gap-2 rounded-md bg-muted/50 px-2 py-1 text-muted-foreground text-sm">
-                                {toolInvocation.args?.query && (
+                                {(toolInvocation.args as WebSearchArgs | undefined)?.query && (
                                     <span className="max-w-32 truncate text-muted-foreground text-sm md:max-w-48">
-                                        "{toolInvocation.args.query}"
+                                        "{(toolInvocation.args as WebSearchArgs).query}"
                                     </span>
                                 )}
-                                {hasResults && (
+                                {hasResults && result && (
                                     <span className="text-muted-foreground text-sm">
                                         <div className="flex items-center gap-2">
                                             <div className="size-1 rounded-full bg-primary" />
                                             <span className="truncate">
-                                                {toolInvocation.result.results.length} results
+                                                {result.results.length} results
                                             </span>
                                         </div>
                                     </span>
@@ -153,87 +176,84 @@ export const WebSearchToolRenderer = memo(
                     }}
                 >
                     <div ref={innerRef} className="text-muted-foreground">
-                        {hasResults && (
+                        {hasResults && result && (
                             <div className="relative w-full">
                                 <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border flex gap-4 overflow-x-auto p-4">
-                                    {toolInvocation.result?.results?.map(
-                                        (result: any, index: number) => (
-                                            <button
-                                                key={index}
-                                                type="button"
-                                                className={cn(
-                                                    "group relative flex-shrink-0 rounded-lg border bg-card text-left",
-                                                    "transition-all duration-200 hover:border-primary/20 hover:shadow-lg",
-                                                    "hover:border-primary/20 hover:bg-accent/50",
-                                                    "w-64 min-w-64 overflow-hidden"
-                                                )}
-                                                onClick={() =>
-                                                    result.url && window.open(result.url, "_blank")
-                                                }
-                                                aria-label={`Open ${result.title} in new tab`}
-                                            >
-                                                {result.url && (
-                                                    <div className="relative h-32 overflow-hidden bg-muted/30">
-                                                        <img
-                                                            src={getOpenGraphImage(result.url)}
-                                                            alt=""
-                                                            className="aspect-video h-full w-full object-cover"
-                                                            style={{
-                                                                margin: "0 auto",
-                                                                maxHeight: "100%"
-                                                            }}
-                                                            onError={(e) => {
-                                                                const target =
-                                                                    e.target as HTMLImageElement
-                                                                target.style.display = "none"
-                                                                const fallback =
-                                                                    target.nextElementSibling as HTMLDivElement
-                                                                if (fallback)
-                                                                    fallback.style.display = "flex"
-                                                            }}
-                                                        />
-                                                        <div
-                                                            className="absolute inset-0 hidden items-center justify-center bg-muted/50"
-                                                            style={{ display: "none" }}
-                                                        >
-                                                            <Globe className="size-8 text-muted-foreground/50" />
-                                                        </div>
+                                    {result.results?.map((searchResult, index: number) => (
+                                        <button
+                                            key={index}
+                                            type="button"
+                                            className={cn(
+                                                "group relative flex-shrink-0 rounded-lg border bg-card text-left",
+                                                "transition-all duration-200 hover:border-primary/20 hover:shadow-lg",
+                                                "hover:border-primary/20 hover:bg-accent/50",
+                                                "w-64 min-w-64 overflow-hidden"
+                                            )}
+                                            onClick={() =>
+                                                searchResult.url &&
+                                                window.open(searchResult.url, "_blank")
+                                            }
+                                            aria-label={`Open ${searchResult.title} in new tab`}
+                                        >
+                                            {searchResult.url && (
+                                                <div className="relative h-32 overflow-hidden bg-muted/30">
+                                                    <img
+                                                        src={getOpenGraphImage(searchResult.url)}
+                                                        alt=""
+                                                        className="aspect-video h-full w-full object-cover"
+                                                        style={{
+                                                            margin: "0 auto",
+                                                            maxHeight: "100%"
+                                                        }}
+                                                        onError={(e) => {
+                                                            const target =
+                                                                e.target as HTMLImageElement
+                                                            target.style.display = "none"
+                                                            const fallback =
+                                                                target.nextElementSibling as HTMLDivElement
+                                                            if (fallback)
+                                                                fallback.style.display = "flex"
+                                                        }}
+                                                    />
+                                                    <div
+                                                        className="absolute inset-0 hidden items-center justify-center bg-muted/50"
+                                                        style={{ display: "none" }}
+                                                    >
+                                                        <Globe className="size-8 text-muted-foreground/50" />
                                                     </div>
-                                                )}
-
-                                                <div className="space-y-2 p-4">
-                                                    <div className="flex items-center gap-2">
-                                                        {result.url && (
-                                                            <FaviconWithLoader url={result.url} />
-                                                        )}
-
-                                                        <h1 className="leading m-0 mb-0 truncate font-semibold text-base text-foreground">
-                                                            {result.title}
-                                                        </h1>
-                                                    </div>
-                                                    <p className="line-clamp-3 text-muted-foreground text-sm leading-relaxed">
-                                                        {result.description || result.snippet}
-                                                    </p>
-
-                                                    {result.url && (
-                                                        <div className="flex items-center gap-1.5 border-border/50 border-t pt-2">
-                                                            <span className="flex-1 truncate text-muted-foreground/70 text-xs">
-                                                                {
-                                                                    result.url
-                                                                        .replace(
-                                                                            /^(https?:\/\/)/,
-                                                                            ""
-                                                                        )
-                                                                        .split("/")[0]
-                                                                }
-                                                            </span>
-                                                            <ExternalLink className="size-3 flex-shrink-0 text-muted-foreground/50" />
-                                                        </div>
-                                                    )}
                                                 </div>
-                                            </button>
-                                        )
-                                    )}
+                                            )}
+
+                                            <div className="space-y-2 p-4">
+                                                <div className="flex items-center gap-2">
+                                                    {searchResult.url && (
+                                                        <FaviconWithLoader url={searchResult.url} />
+                                                    )}
+
+                                                    <h1 className="leading m-0 mb-0 truncate font-semibold text-base text-foreground">
+                                                        {searchResult.title}
+                                                    </h1>
+                                                </div>
+                                                <p className="line-clamp-3 text-muted-foreground text-sm leading-relaxed">
+                                                    {searchResult.description ||
+                                                        searchResult.snippet}
+                                                </p>
+
+                                                {searchResult.url && (
+                                                    <div className="flex items-center gap-1.5 border-border/50 border-t pt-2">
+                                                        <span className="flex-1 truncate text-muted-foreground/70 text-xs">
+                                                            {
+                                                                searchResult.url
+                                                                    .replace(/^(https?:\/\/)/, "")
+                                                                    .split("/")[0]
+                                                            }
+                                                        </span>
+                                                        <ExternalLink className="size-3 flex-shrink-0 text-muted-foreground/50" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         )}

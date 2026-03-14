@@ -99,7 +99,7 @@ export const useVoiceRecorder = ({ onTranscript }: UseVoiceRecorderOptions) => {
     const mediaRecorderRef = useRef<MediaRecorder | null>(null)
     const audioContextRef = useRef<AudioContext | null>(null)
     const analyserRef = useRef<AnalyserNode | null>(null)
-    const dataArrayRef = useRef<Uint8Array | null>(null)
+    const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null)
     const recordingStartTimeRef = useRef<number>(0)
     const durationIntervalRef = useRef<number | null>(null)
     const audioLevelIntervalRef = useRef<number | null>(null)

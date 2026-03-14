@@ -13,7 +13,7 @@ export const ImagePart = v.object({
 
 export const ReasoningPart = v.object({
     type: v.literal("reasoning"),
-    reasoning: v.string(),
+    reasoningText: v.string(),
     signature: v.optional(v.string()),
     duration: v.optional(v.number()),
     details: v.optional(

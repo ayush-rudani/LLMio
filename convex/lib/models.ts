@@ -3,7 +3,6 @@ import { createFal } from "@ai-sdk/fal"
 import { createGoogleGenerativeAI } from "@ai-sdk/google"
 import { createGroq } from "@ai-sdk/groq"
 import { createOpenAI } from "@ai-sdk/openai"
-import type { ProviderV1 } from "@ai-sdk/provider"
 import { createOpenRouter } from "@openrouter/ai-sdk-provider"
 
 import type { ModelAbility } from "../schema/settings"
@@ -31,7 +30,7 @@ export type SharedModel<Abilities extends ModelAbility[] = ModelAbility[]> = {
     abilities: Abilities
     mode?: "text" | "image" | "speech-to-text"
     contextLength?: number
-    maxTokens?: number
+    maxOutputTokens?: number
     supportedImageSizes?: ImageSize[]
     customIcon?:
         | "stability-ai"
@@ -366,10 +365,16 @@ export const MODELS_SHARED: SharedModel[] = [
     }
 ] as const
 
+// Type for providers that expose languageModel and optionally imageModel
+interface ProviderWithModels {
+    languageModel: (modelId: string) => import("ai").LanguageModel
+    imageModel?: (modelId: string) => import("ai").ImageModel
+}
+
 export const createProvider = (
     providerId: CoreProvider | "openrouter" | "fal",
     apiKey: string | "internal"
-): Omit<ProviderV1, "textEmbeddingModel"> => {
+): ProviderWithModels => {
     if (apiKey !== "internal" && (!apiKey || apiKey.trim() === "")) {
         throw new Error("API key is required for non-internal providers")
     }
@@ -377,8 +382,7 @@ export const createProvider = (
     switch (providerId) {
         case "openai":
             return createOpenAI({
-                apiKey: apiKey === "internal" ? process.env.OPENAI_API_KEY : apiKey,
-                compatibility: "strict"
+                apiKey: apiKey === "internal" ? process.env.OPENAI_API_KEY : apiKey
             })
         case "anthropic":
             return createAnthropic({

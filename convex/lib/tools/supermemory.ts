@@ -1,6 +1,6 @@
 import { tool } from "ai"
 import supermemory from "supermemory"
-import { z } from "zod"
+import { z } from 'zod/v3';
 import { internal } from "../../_generated/api"
 import type { ToolAdapter } from "../toolkit"
 
@@ -10,7 +10,7 @@ export const SupermemoryAdapter: ToolAdapter = async ({ ctx, enabledTools, userS
     return {
         add_memory: tool({
             description: "Add content to supermemory for future recall and reference",
-            parameters: z.object({
+            inputSchema: z.object({
                 content: z.string().describe("The content to store in memory"),
                 metadata: z
                     .object({
@@ -84,7 +84,7 @@ export const SupermemoryAdapter: ToolAdapter = async ({ ctx, enabledTools, userS
 
         search_memories: tool({
             description: "Search through stored memories to find relevant information",
-            parameters: z.object({
+            inputSchema: z.object({
                 query: z.string().describe("The search query to find relevant memories"),
                 limit: z
                     .number()
@@ -162,5 +162,5 @@ export const SupermemoryAdapter: ToolAdapter = async ({ ctx, enabledTools, userS
                 }
             }
         })
-    }
+    };
 }

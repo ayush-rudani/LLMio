@@ -76,6 +76,18 @@ function CustomizationSettings() {
         )
     }
 
+    // Handle error response from getUserSettings
+    if ("error" in userSettings) {
+        return (
+            <SettingsLayout
+                title="Customization"
+                description="Personalize how the AI interacts with you"
+            >
+                <p className="text-muted-foreground text-sm">Failed to load settings.</p>
+            </SettingsLayout>
+        )
+    }
+
     return (
         <SettingsLayout
             title="Customization"

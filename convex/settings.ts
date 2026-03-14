@@ -114,7 +114,7 @@ export const getUserRegistryInternal = internalQuery({
                 adapters: [`${model.providerId}:${model.modelId}`],
                 abilities: model.abilities,
                 contextLength: model.contextLength,
-                maxTokens: model.maxTokens,
+                maxOutputTokens: model.maxOutputTokens,
                 customProviderId: model.providerId
             }
         }
@@ -498,7 +498,7 @@ export const updateUserSettingsPartial = mutation({
                         modelId: v.string(),
                         providerId: v.string(),
                         contextLength: v.number(),
-                        maxTokens: v.number(),
+                        maxOutputTokens: v.number(),
                         abilities: v.array(
                             v.union(
                                 v.literal("reasoning"),

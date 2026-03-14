@@ -1,17 +1,30 @@
 import { cn } from "@/lib/utils"
-import type { ToolInvocation } from "ai"
 import { ChevronDown, Loader2, Wrench } from "lucide-react"
 import { memo, useEffect, useRef, useState } from "react"
 import { Codeblock } from "../codeblock"
 
+// Custom type to match our DB schema (v4-compatible format)
+type DBToolInvocation = {
+    state: "call" | "result" | "partial-call"
+    args?: unknown
+    result?: unknown
+    toolCallId: string
+    toolName: string
+}
+
 export const GenericToolRenderer = memo(
-    ({ toolInvocation }: { toolInvocation: ToolInvocation }) => {
+    ({ toolInvocation }: { toolInvocation: DBToolInvocation }) => {
         const [isExpanded, setIsExpanded] = useState(false)
         const contentRef = useRef<HTMLDivElement>(null)
         const innerRef = useRef<HTMLDivElement>(null)
 
         const isLoading = toolInvocation.state === "partial-call" || toolInvocation.state === "call"
-        const hasResults = toolInvocation.state === "result" && toolInvocation.result
+        const hasResults = toolInvocation.state === "result" && !!toolInvocation.result
+
+        const argsString = toolInvocation.args ? JSON.stringify(toolInvocation.args, null, 2) : ""
+        const resultString = toolInvocation.result
+            ? JSON.stringify(toolInvocation.result, null, 2)
+            : ""
 
         useEffect(() => {
             if (!contentRef.current || !innerRef.current) return
@@ -82,11 +95,11 @@ export const GenericToolRenderer = memo(
                                         disable={{ expand: true }}
                                         default={{ wrap: true }}
                                     >
-                                        {JSON.stringify(toolInvocation.args, null, 2)}
+                                        {argsString}
                                     </Codeblock>
                                 </div>
 
-                                {toolInvocation.result && (
+                                {resultString && (
                                     <>
                                         <span className="font-medium text-foreground text-sm">
                                             Result
@@ -97,7 +110,7 @@ export const GenericToolRenderer = memo(
                                                 disable={{ expand: true }}
                                                 default={{ wrap: true }}
                                             >
-                                                {JSON.stringify(toolInvocation.result, null, 2)}
+                                                {resultString}
                                             </Codeblock>
                                         </div>
                                     </>

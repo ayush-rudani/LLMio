@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { AlertTriangleIcon, LoaderIcon } from "lucide-react"
 import { useForm } from "react-hook-form"
-import { z } from "zod"
+import { z } from "zod/v3"
 import { Button } from "../ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog"
 import { Form, FormControl, FormField, FormItem, FormMessage } from "../ui/form"
@@ -28,7 +28,7 @@ export function ImportThemeDialog({ open, onOpenChange, onThemeImported }: Impor
     const queryClient = useQueryClient()
 
     const form = useForm<ThemeImportForm>({
-        resolver: zodResolver(formSchema),
+        resolver: zodResolver(formSchema as any),
         defaultValues: {
             url: ""
         }

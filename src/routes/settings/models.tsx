@@ -235,7 +235,7 @@ function ModelsSettings() {
         modelId: "",
         providerId: "",
         contextLength: 4096,
-        maxTokens: 1024,
+        maxOutputTokens: 1024,
         abilities: [],
         enabled: true
     })
@@ -279,7 +279,7 @@ function ModelsSettings() {
                         modelId: customModelForm.modelId,
                         providerId: customModelForm.providerId,
                         contextLength: customModelForm.contextLength,
-                        maxTokens: customModelForm.maxTokens,
+                        maxOutputTokens: customModelForm.maxOutputTokens,
                         abilities: customModelForm.abilities
                     }
                 }
@@ -292,7 +292,7 @@ function ModelsSettings() {
                 modelId: "",
                 providerId: "",
                 contextLength: 4096,
-                maxTokens: 1024,
+                maxOutputTokens: 1024,
                 abilities: [],
                 enabled: true
             })
@@ -316,7 +316,7 @@ function ModelsSettings() {
             modelId: model.modelId,
             providerId: model.providerId,
             contextLength: model.contextLength,
-            maxTokens: model.maxTokens,
+            maxOutputTokens: model.maxOutputTokens,
             abilities: model.abilities,
             enabled: model.enabled
         })
@@ -336,7 +336,7 @@ function ModelsSettings() {
                         modelId: customModelForm.modelId,
                         providerId: customModelForm.providerId,
                         contextLength: customModelForm.contextLength,
-                        maxTokens: customModelForm.maxTokens,
+                        maxOutputTokens: customModelForm.maxOutputTokens,
                         abilities: customModelForm.abilities
                     }
                 }
@@ -349,7 +349,7 @@ function ModelsSettings() {
                 modelId: "",
                 providerId: "",
                 contextLength: 4096,
-                maxTokens: 1024,
+                maxOutputTokens: 1024,
                 abilities: [],
                 enabled: true
             })
@@ -573,11 +573,11 @@ function ModelsSettings() {
                                                 <Input
                                                     id="edit-custom-model-tokens"
                                                     type="number"
-                                                    value={customModelForm.maxTokens}
+                                                    value={customModelForm.maxOutputTokens}
                                                     onChange={(e) =>
                                                         setCustomModelForm((prev) => ({
                                                             ...prev,
-                                                            maxTokens:
+                                                            maxOutputTokens:
                                                                 Number.parseInt(e.target.value) ||
                                                                 1024
                                                         }))
@@ -652,7 +652,7 @@ function ModelsSettings() {
                                                         modelId: "",
                                                         providerId: "",
                                                         contextLength: 4096,
-                                                        maxTokens: 1024,
+                                                        maxOutputTokens: 1024,
                                                         abilities: [],
                                                         enabled: true
                                                     })
@@ -780,11 +780,11 @@ function ModelsSettings() {
                                                 <Input
                                                     id="custom-model-tokens"
                                                     type="number"
-                                                    value={customModelForm.maxTokens}
+                                                    value={customModelForm.maxOutputTokens}
                                                     onChange={(e) =>
                                                         setCustomModelForm((prev) => ({
                                                             ...prev,
-                                                            maxTokens:
+                                                            maxOutputTokens:
                                                                 Number.parseInt(e.target.value) ||
                                                                 1024
                                                         }))
@@ -891,5 +891,5 @@ function ModelsSettings() {
                 </div>
             </div>
         </SettingsLayout>
-    )
+    );
 }

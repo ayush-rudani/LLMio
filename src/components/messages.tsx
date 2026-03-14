@@ -19,6 +19,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog"
 import { Loader } from "./ui/loader"
 import { Textarea } from "./ui/textarea"
 
+// Custom types to match our DB schema (v4-compatible format)
+type DBFilePart = { type: "file"; data: string; filename?: string; mimeType?: string }
+type DBReasoningPart = { type: "reasoning"; reasoningText: string }
+type DBToolInvocationPart = {
+    type: "tool-invocation"
+    toolInvocation: {
+        state: "call" | "result" | "partial-call"
+        args?: unknown
+        result?: unknown
+        toolCallId: string
+        toolName: string
+    }
+}
+type DBMessagePart =
+    | UIMessage["parts"][number]
+    | DBFilePart
+    | DBReasoningPart
+    | DBToolInvocationPart
+
 const extractFileName = (data: string) => {
     const _extract = data.startsWith("attachments/") ? (data.split("/").pop() ?? "") : ""
     return _extract.length > 51 ? _extract.slice(51) : _extract
@@ -38,7 +57,7 @@ const FileAttachment = memo(
         part,
         onPreview
     }: {
-        part: { data: string; filename?: string; mimeType?: string }
+        part: DBFilePart
         onPreview?: () => void
     }) => {
         const { isImage } = getFileTypeInfo(extractFileName(part.data), part.mimeType)
@@ -146,9 +165,12 @@ const PartsRenderer = memo(
                     </div>
                 )
             case "reasoning": {
-                const hasReasoningContent = part.reasoning && part.reasoning.trim() !== ""
+                // DB stores as `reasoningText` (v4), v5 SDK uses `text`
+                const dbPart = part as unknown as DBReasoningPart
+                const reasoningText = dbPart.reasoningText ?? (part as { text?: string }).text ?? ""
+                const hasReasoningContent = reasoningText && reasoningText.trim() !== ""
                 const isReasoningStreaming =
-                    isStreaming && (!hasReasoningContent || part.reasoning.endsWith(""))
+                    isStreaming && (!hasReasoningContent || reasoningText.endsWith(""))
 
                 return (
                     <Reasoning className="mb-6" isStreaming={isReasoningStreaming}>
@@ -158,21 +180,28 @@ const PartsRenderer = memo(
                             className="rounded-lg border bg-muted/50"
                             contentClassName="prose prose-p:my-0 prose-pre:my-2 prose-ul:my-2 prose-li:mt-1 prose-li:mb-0 max-w-none prose-pre:bg-transparent p-4 prose-pre:p-0 font-claude-message prose-headings:font-semibold prose-strong:font-medium prose-pre:text-foreground leading-[1.65rem] [&>div>div>:is(p,blockquote,h1,h2,h3,h4,h5,h6)]:pl-2 [&>div>div>:is(p,blockquote,ul,ol,h1,h2,h3,h4,h5,h6)]:pr-8 [&_.ignore-pre-bg>div]:bg-transparent [&_pre>div]:border-0.5 [&_pre>div]:border-border [&_pre>div]:bg-background"
                         >
-                            {hasReasoningContent ? part.reasoning : ""}
+                            {hasReasoningContent ? reasoningText : ""}
                         </ReasoningContent>
                     </Reasoning>
                 )
             }
-            case "tool-invocation":
-                if (part.toolInvocation.toolName === "web_search")
-                    return <WebSearchToolRenderer toolInvocation={part.toolInvocation} />
+            case "tool-invocation": {
+                // DB stores parts with nested `toolInvocation` (v4 format)
+                const dbPart = part as unknown as DBToolInvocationPart
+                const toolInvocation = dbPart.toolInvocation
+                if (toolInvocation.toolName === "web_search")
+                    return <WebSearchToolRenderer toolInvocation={toolInvocation} />
 
-                if (part.toolInvocation.toolName === "image_generation")
-                    return <ImageGenerationToolRenderer toolInvocation={part.toolInvocation} />
+                if (toolInvocation.toolName === "image_generation")
+                    return <ImageGenerationToolRenderer toolInvocation={toolInvocation} />
 
-                return <GenericToolRenderer toolInvocation={part.toolInvocation} />
-            case "file":
-                return <FileAttachment part={part} onPreview={() => onFilePreview?.(part)} />
+                return <GenericToolRenderer toolInvocation={toolInvocation} />
+            }
+            case "file": {
+                // DB stores file parts with `data` directly (v4 format)
+                const dbPart = part as unknown as DBFilePart
+                return <FileAttachment part={dbPart} onPreview={() => onFilePreview?.(dbPart)} />
+            }
         }
     }
 )
@@ -334,7 +363,9 @@ export function Messages({
             lastMessage.parts.every(
                 (part) =>
                     (part.type === "text" && (!part.text || part.text.trim() === "")) ||
-                    (part.type === "reasoning" && (!part.reasoning || part.reasoning.trim() === ""))
+                    (part.type === "reasoning" &&
+                        (!(part as unknown as DBReasoningPart).reasoningText ||
+                            (part as unknown as DBReasoningPart).reasoningText.trim() === ""))
             ))
 
     const showTypingLoader = status === "submitted" || isStreamingWithoutContent

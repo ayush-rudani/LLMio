@@ -7,11 +7,19 @@ import { useAutoResume } from "@/hooks/use-auto-resume"
 import { browserEnv } from "@/lib/browser-env"
 import { useChatStore } from "@/lib/chat-store"
 import { useModelStore } from "@/lib/model-store"
-import { type Message, useChat } from "@ai-sdk/react"
+import { useChat } from "@ai-sdk/react"
+import { DefaultChatTransport } from "ai"
 import { useQuery as useConvexQuery } from "convex-helpers/react/cache"
 import type { Infer } from "convex/values"
 import { nanoid } from "nanoid"
-import { useCallback, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
+
+// Define custom data types for our stream
+type CustomDataTypes = {
+    thread_id: string
+    stream_id: string
+    model_name: string
+}
 
 export function useChatIntegration<IsShared extends boolean>({
     threadId,
@@ -32,8 +40,15 @@ export function useChatIntegration<IsShared extends boolean>({
         reasoningEffort,
         getEffectiveMcpOverrides
     } = useModelStore()
-    const { rerenderTrigger, shouldUpdateQuery, setShouldUpdateQuery, triggerRerender } =
-        useChatStore()
+    const {
+        rerenderTrigger,
+        shouldUpdateQuery,
+        setShouldUpdateQuery,
+        triggerRerender,
+        setThreadId,
+        setAttachedStreamId,
+        setPendingStream
+    } = useChatStore()
     const seededNextId = useRef<string | null>(null)
 
     // For regular threads, use getThreadMessages
@@ -77,53 +92,47 @@ export function useChatIntegration<IsShared extends boolean>({
             : threadId === undefined
               ? `new_chat_${rerenderTrigger}`
               : threadId,
-        headers: isShared
-            ? {}
-            : {
-                  authorization: `Bearer ${tokenData.token}`
-              },
+
         experimental_throttle: 50,
-        experimental_prepareRequestBody(body) {
-            // Skip request preparation for shared threads since they're read-only
-            if (isShared) return null
 
-            if (threadId) {
-                useChatStore.getState().setPendingStream(threadId, true)
-            }
-            const proposedNewAssistantId = nanoid()
-            seededNextId.current = proposedNewAssistantId
+        messages: initialMessages,
 
-            const messages = body.messages as Message[]
-            const message = messages[messages.length - 1]
-
-            // Get effective MCP overrides (includes defaults for new chats)
-            const mcpOverrides = getEffectiveMcpOverrides(threadId)
-
-            return {
-                ...body.requestBody,
-                id: threadId,
-                proposedNewAssistantId,
-                model: selectedModel,
-                message: {
-                    parts: message?.parts,
-                    role: message?.role,
-                    messageId: message?.id
-                },
-                enabledTools,
-                imageSize: selectedImageSize,
-                folderId,
-                reasoningEffort,
-                mcpOverrides
-            }
-        },
-        initialMessages,
         onFinish: () => {
             if (!isShared && shouldUpdateQuery) {
                 setShouldUpdateQuery(false)
                 triggerRerender()
             }
         },
-        api: isShared ? undefined : `${browserEnv("VITE_CONVEX_API_URL")}/chat`,
+
+        // Handle custom data parts (thread_id, stream_id) from the server
+        onData: (dataPart) => {
+            if (isShared) return
+
+            // dataPart.type is like "data-thread_id", we need to extract the key
+            const dataType = dataPart.type.replace("data-", "")
+
+            if (dataType === "thread_id" && typeof dataPart.data === "string") {
+                setThreadId(dataPart.data)
+                if (typeof window !== "undefined") {
+                    window.history.replaceState({}, "", `/thread/${dataPart.data}`)
+                }
+                setShouldUpdateQuery(true)
+                console.log("[UCI:onData:thread_id]", { t: dataPart.data })
+            }
+
+            if (dataType === "stream_id" && typeof dataPart.data === "string") {
+                const currentThreadId = useChatStore.getState().threadId
+                if (currentThreadId) {
+                    setAttachedStreamId(currentThreadId, dataPart.data)
+                    setPendingStream(currentThreadId, false)
+                    console.log("[UCI:onData:stream_id]", {
+                        t: currentThreadId,
+                        sid: dataPart.data.slice(0, 5)
+                    })
+                }
+            }
+        },
+
         generateId: () => {
             if (seededNextId.current) {
                 const id = seededNextId.current
@@ -131,8 +140,80 @@ export function useChatIntegration<IsShared extends boolean>({
                 return id
             }
             return nanoid()
-        }
+        },
+
+        transport: new DefaultChatTransport({
+            api: isShared ? undefined : `${browserEnv("VITE_CONVEX_API_URL")}/chat`,
+            headers: isShared
+                ? {}
+                : {
+                      authorization: `Bearer ${tokenData.token}`
+                  },
+            prepareSendMessagesRequest({ messages: requestMessages, id: requestId }) {
+                // Skip request preparation for shared threads since they're read-only
+                if (isShared) return { body: {} }
+
+                if (threadId) {
+                    useChatStore.getState().setPendingStream(threadId, true)
+                }
+                const proposedNewAssistantId = nanoid()
+                seededNextId.current = proposedNewAssistantId
+
+                const message = requestMessages[requestMessages.length - 1]
+
+                // Get effective MCP overrides (includes defaults for new chats)
+                const mcpOverrides = getEffectiveMcpOverrides(threadId)
+
+                return {
+                    body: {
+                        id: threadId,
+                        proposedNewAssistantId,
+                        model: selectedModel,
+                        message: {
+                            parts: message?.parts,
+                            role: message?.role,
+                            messageId: message?.id
+                        },
+                        enabledTools,
+                        imageSize: selectedImageSize,
+                        folderId,
+                        reasoningEffort,
+                        mcpOverrides
+                    }
+                }
+            }
+        })
     })
+
+    // Sync messages when navigating to a different thread or when backend messages load
+    // In AI SDK v5, the `messages` prop is only used as the initial value - we must
+    // call setMessages to update the internal state when the thread changes
+    useEffect(() => {
+        // Skip for new chats (no threadId means new chat)
+        if (!threadId && !sharedThreadId) return
+
+        // Skip if messages haven't loaded yet
+        if (initialMessages.length === 0) return
+
+        // Skip if we're currently streaming (don't interrupt active generation)
+        if (chatHelpers.status === "streaming" || chatHelpers.status === "submitted") return
+
+        // Sync messages from backend to UI
+        // This handles: navigating to existing threads, page refresh, shared threads
+        console.log("[UCI:sync_messages]", {
+            threadId: threadId?.slice(0, 8) || sharedThreadId?.slice(0, 8),
+            initialMsgs: initialMessages.length,
+            currentUIMsgs: chatHelpers.messages.length
+        })
+        chatHelpers.setMessages(initialMessages)
+    }, [
+        threadId,
+        sharedThreadId,
+        initialMessages,
+        chatHelpers.status
+        // Note: intentionally not including chatHelpers.setMessages or chatHelpers.messages
+        // to avoid infinite loops - setMessages is stable, messages would cause loops
+    ])
 
     const customResume = useCallback(() => {
         console.log("[UCI:custom_resume]", {
@@ -147,10 +228,11 @@ export function useChatIntegration<IsShared extends boolean>({
             console.log("[UCI:messages_restored]", { count: initialMessages.length })
         }
 
-        chatHelpers.experimental_resume()
+        // In AI SDK v5, experimental_resume was renamed to resumeStream
+        chatHelpers.resumeStream()
     }, [
         chatHelpers.setMessages,
-        chatHelpers.experimental_resume,
+        chatHelpers.resumeStream,
         initialMessages,
         threadMessages,
         threadId,

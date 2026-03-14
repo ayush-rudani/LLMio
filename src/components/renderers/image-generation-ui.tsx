@@ -1,20 +1,44 @@
 import { ImageSkeleton } from "@/components/ui/image-skeleton"
 import { MODELS_SHARED } from "@/convex/lib/models"
 import { browserEnv } from "@/lib/browser-env"
-import type { ToolInvocation } from "ai"
 import { AlertCircle } from "lucide-react"
 import { memo, useMemo, useState } from "react"
 
+// Custom type to match our DB schema (v4-compatible format)
+type ImageGenerationArgs = {
+    imageSize?: string
+    prompt?: string
+}
+
+type ImageGenerationResult = {
+    error?: string
+    assets?: { imageUrl: string }[]
+    prompt?: string
+    modelId?: string
+}
+
+// General type for tool invocations passed from messages.tsx
+type GenericDBToolInvocation = {
+    state: "call" | "result" | "partial-call"
+    args?: unknown
+    result?: unknown
+    toolCallId: string
+    toolName: string
+}
+
 export const ImageGenerationToolRenderer = memo(
-    ({ toolInvocation }: { toolInvocation: ToolInvocation }) => {
+    ({ toolInvocation }: { toolInvocation: GenericDBToolInvocation }) => {
         if (toolInvocation.toolName !== "image_generation") return null
 
+        const args = toolInvocation.args as ImageGenerationArgs | undefined
+        const result = toolInvocation.result as ImageGenerationResult | undefined
+
         const isLoading = toolInvocation.state === "partial-call" || toolInvocation.state === "call"
-        const hasResult = toolInvocation.state === "result" && toolInvocation.result
-        const hasError = hasResult && "error" in toolInvocation.result
+        const hasResult = toolInvocation.state === "result" && !!result
+        const hasError = hasResult && !!result?.error
 
         // Extract aspect ratio from args to determine container dimensions
-        const aspectRatio = toolInvocation.args?.imageSize || "1:1"
+        const aspectRatio = args?.imageSize || "1:1"
 
         // Convert aspect ratio to CSS aspect-ratio value
         const cssAspectRatio = useMemo(() => {
@@ -84,19 +108,19 @@ export const ImageGenerationToolRenderer = memo(
                 >
                     <AlertCircle className="mx-auto mb-2 size-8 text-destructive/70" />
                     <p className="text-destructive text-sm">
-                        {toolInvocation.result.error || "Failed to generate image"}
+                        {result?.error || "Failed to generate image"}
                     </p>
                 </div>
             )
         }
 
-        if (hasResult && toolInvocation.result.assets) {
-            const assets = toolInvocation.result.assets
-            const prompt = toolInvocation.result.prompt || toolInvocation.args?.prompt
+        if (hasResult && result?.assets) {
+            const assets = result.assets
+            const prompt = result.prompt || args?.prompt || ""
 
-            const modelName = toolInvocation.result.modelId
-                ? MODELS_SHARED.find((m) => m.id === toolInvocation.result.modelId)?.name
-                : toolInvocation.result.modelId
+            const modelName = result.modelId
+                ? MODELS_SHARED.find((m) => m.id === result.modelId)?.name || ""
+                : ""
 
             return assets.map((asset, index) => (
                 <ImageWithErrorHandler

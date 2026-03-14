@@ -40,8 +40,8 @@ export const getMyUsageStats = query({
                 modelId: model.id,
                 modelName: model.name,
                 requests: modelEvents.length,
-                promptTokens: modelEvents.reduce((sum, e) => sum + e.p, 0),
-                completionTokens: modelEvents.reduce((sum, e) => sum + e.c, 0),
+                inputTokens: modelEvents.reduce((sum, e) => sum + e.p, 0),
+                outputTokens: modelEvents.reduce((sum, e) => sum + e.c, 0),
                 reasoningTokens: modelEvents.reduce((sum, e) => sum + e.r, 0),
                 totalTokens: modelEvents.reduce((sum, e) => sum + e.p + e.c + e.r, 0)
             }
@@ -78,8 +78,8 @@ export const getMyUsageChartData = query({
                 {
                     requests: number
                     tokens: number
-                    promptTokens: number
-                    completionTokens: number
+                    inputTokens: number
+                    outputTokens: number
                     reasoningTokens: number
                 }
             >
@@ -101,7 +101,23 @@ export const getMyUsageChartData = query({
                 .collect()
 
             // Group by hour
-            const chartData = []
+            type HourChartData = {
+                hoursSinceEpoch: number
+                date: string
+                totalRequests: number
+                totalTokens: number
+                models: Record<
+                    string,
+                    {
+                        requests: number
+                        tokens: number
+                        inputTokens: number
+                        outputTokens: number
+                        reasoningTokens: number
+                    }
+                >
+            }
+            const chartData: HourChartData[] = []
             for (let i = hours - 1; i >= 0; i--) {
                 const hourStart = Date.now() - i * 60 * 60 * 1000
                 const hourEnd = Date.now() - (i - 1) * 60 * 60 * 1000
@@ -119,8 +135,8 @@ export const getMyUsageChartData = query({
                         {
                             requests: number
                             tokens: number
-                            promptTokens: number
-                            completionTokens: number
+                            inputTokens: number
+                            outputTokens: number
                             reasoningTokens: number
                         }
                     >
@@ -133,8 +149,8 @@ export const getMyUsageChartData = query({
                         hourData.models[model.id] = {
                             requests: modelEvents.length,
                             tokens: modelEvents.reduce((sum, e) => sum + e.p + e.c + e.r, 0),
-                            promptTokens: modelEvents.reduce((sum, e) => sum + e.p, 0),
-                            completionTokens: modelEvents.reduce((sum, e) => sum + e.c, 0),
+                            inputTokens: modelEvents.reduce((sum, e) => sum + e.p, 0),
+                            outputTokens: modelEvents.reduce((sum, e) => sum + e.c, 0),
                             reasoningTokens: modelEvents.reduce((sum, e) => sum + e.r, 0)
                         }
                     }
@@ -157,7 +173,23 @@ export const getMyUsageChartData = query({
             .collect()
 
         // Group by day
-        const chartData = []
+        type DayChartData = {
+            daysSinceEpoch: number
+            date: string
+            totalRequests: number
+            totalTokens: number
+            models: Record<
+                string,
+                {
+                    requests: number
+                    tokens: number
+                    inputTokens: number
+                    outputTokens: number
+                    reasoningTokens: number
+                }
+            >
+        }
+        const chartData: DayChartData[] = []
         for (let i = days - 1; i >= 0; i--) {
             const daysSince = getDaysSinceEpoch(i)
             const dayEvents = events.filter((e) => e.daysSinceEpoch === daysSince)
@@ -172,8 +204,8 @@ export const getMyUsageChartData = query({
                     {
                         requests: number
                         tokens: number
-                        promptTokens: number
-                        completionTokens: number
+                        inputTokens: number
+                        outputTokens: number
                         reasoningTokens: number
                     }
                 >
@@ -186,8 +218,8 @@ export const getMyUsageChartData = query({
                     dayData.models[model.id] = {
                         requests: modelEvents.length,
                         tokens: modelEvents.reduce((sum, e) => sum + e.p + e.c + e.r, 0),
-                        promptTokens: modelEvents.reduce((sum, e) => sum + e.p, 0),
-                        completionTokens: modelEvents.reduce((sum, e) => sum + e.c, 0),
+                        inputTokens: modelEvents.reduce((sum, e) => sum + e.p, 0),
+                        outputTokens: modelEvents.reduce((sum, e) => sum + e.c, 0),
                         reasoningTokens: modelEvents.reduce((sum, e) => sum + e.r, 0)
                     }
                 }
@@ -211,8 +243,8 @@ export const getMyModelUsage = query({
             return {
                 modelId,
                 requests: 0,
-                promptTokens: 0,
-                completionTokens: 0,
+                inputTokens: 0,
+                outputTokens: 0,
                 reasoningTokens: 0,
                 totalTokens: 0
             }
@@ -231,8 +263,8 @@ export const getMyModelUsage = query({
         return {
             modelId,
             requests: events.length,
-            promptTokens: events.reduce((sum, e) => sum + e.p, 0),
-            completionTokens: events.reduce((sum, e) => sum + e.c, 0),
+            inputTokens: events.reduce((sum, e) => sum + e.p, 0),
+            outputTokens: events.reduce((sum, e) => sum + e.c, 0),
             reasoningTokens: events.reduce((sum, e) => sum + e.r, 0),
             totalTokens: events.reduce((sum, e) => sum + e.p + e.c + e.r, 0),
             timeframe

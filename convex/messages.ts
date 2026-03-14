@@ -23,8 +23,8 @@ export const patchMessage = internalMutation({
             v.object({
                 modelId: v.optional(v.string()),
                 modelName: v.optional(v.string()),
-                promptTokens: v.optional(v.number()),
-                completionTokens: v.optional(v.number()),
+                inputTokens: v.optional(v.number()),
+                outputTokens: v.optional(v.number()),
                 reasoningTokens: v.optional(v.number()),
                 serverDurationMs: v.optional(v.number())
             })
@@ -54,8 +54,8 @@ export const patchMessage = internalMutation({
                 await db.insert("usageEvents", {
                     userId: thread.authorId,
                     modelId: metadata.modelId,
-                    p: metadata.promptTokens ?? 0,
-                    c: metadata.completionTokens ?? 0,
+                    p: metadata.inputTokens ?? 0,
+                    c: metadata.outputTokens ?? 0,
                     r: metadata.reasoningTokens ?? 0,
                     daysSinceEpoch: Math.floor(Date.now() / (24 * 60 * 60 * 1000))
                 })

@@ -8,7 +8,6 @@ import type { Id } from "@/convex/_generated/dataModel"
 import { MODELS_SHARED } from "@/convex/lib/models"
 import { useSession } from "@/hooks/auth-hooks"
 import { useChatActions } from "@/hooks/use-chat-actions"
-import { useChatDataProcessor } from "@/hooks/use-chat-data-processor"
 import { useChatIntegration } from "@/hooks/use-chat-integration"
 import { useDynamicTitle } from "@/hooks/use-dynamic-title"
 import { useThreadSync } from "@/hooks/use-thread-sync"
@@ -62,7 +61,7 @@ const FolderChat = ({ folderId }: FolderChatProps) => {
     const project =
         "error" in projects ? null : projects?.find((project) => project._id === folderId)
 
-    const { status, data, messages } = useChatIntegration({
+    const { status, messages } = useChatIntegration({
         threadId,
         folderId
     })
@@ -72,7 +71,7 @@ const FolderChat = ({ folderId }: FolderChatProps) => {
         folderId
     })
 
-    useChatDataProcessor({ data, messages })
+    // Data processing (thread_id, stream_id) is now handled in useChatIntegration via onData callback
 
     const handleInputSubmitWithScroll = (inputValue?: string, fileValues?: UploadedFile[]) => {
         handleInputSubmit(inputValue, fileValues)

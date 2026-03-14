@@ -228,7 +228,7 @@ export type CustomModelFormData = {
     modelId: string
     providerId: string
     contextLength: number
-    maxTokens: number
+    maxOutputTokens: number
     abilities: ModelAbility[]
     enabled: boolean
 }

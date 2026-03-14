@@ -1,6 +1,6 @@
+import { createMCPClient } from "@ai-sdk/mcp"
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js"
-import { experimental_createMCPClient as createMCPClient } from "ai"
-import type { CoreTool } from "ai"
+import type { ToolSet } from "ai"
 import type { ToolAdapter } from "../toolkit"
 
 export const MCPAdapter: ToolAdapter = async ({ enabledTools, userSettings }) => {
@@ -33,7 +33,7 @@ export const MCPAdapter: ToolAdapter = async ({ enabledTools, userSettings }) =>
         mcpServers.map((s) => ({ name: s.name, url: s.url, type: s.type, enabled: s.enabled }))
     )
 
-    const tools: Record<string, CoreTool> = {}
+    const tools: ToolSet = {}
 
     // Initialize MCP clients and collect tools
     const initializeServers = async () => {
