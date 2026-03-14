@@ -1,6 +1,8 @@
 type Env = {
     VITE_CONVEX_URL: string
     VITE_CONVEX_API_URL: string
+    VITE_CONVEX_SITE_URL: string
+    VITE_SITE_URL: string
 }
 
 export const browserEnv = (key: keyof Env) => {

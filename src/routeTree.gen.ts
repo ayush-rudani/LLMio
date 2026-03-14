@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { createFileRoute } from '@tanstack/react-router'
-import { createServerRootRoute } from '@tanstack/react-start/server'
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ChatRouteImport } from './routes/_chat'
@@ -24,7 +23,6 @@ import { Route as SettingsAppearanceRouteImport } from './routes/settings/appear
 import { Route as SettingsAiOptionsRouteImport } from './routes/settings/ai-options'
 import { Route as ChatLibraryRouteImport } from './routes/_chat.library'
 import { Route as ChatThreadThreadIdRouteImport } from './routes/_chat.thread.$threadId'
-import { ServerRoute as ApiAuthSplatServerRouteImport } from './routes/api/auth/$'
 
 const PrivacyPolicyLazyRouteImport = createFileRoute('/privacy-policy')()
 const AboutLazyRouteImport = createFileRoute('/about')()
@@ -36,7 +34,6 @@ const ChatSSharedThreadIdLazyRouteImport = createFileRoute(
 const ChatFolderFolderIdLazyRouteImport = createFileRoute(
   '/_chat/folder/$folderId',
 )()
-const rootServerRouteImport = createServerRootRoute()
 
 const PrivacyPolicyLazyRoute = PrivacyPolicyLazyRouteImport.update({
   id: '/privacy-policy',
@@ -136,11 +133,6 @@ const ChatThreadThreadIdRoute = ChatThreadThreadIdRouteImport.update({
   id: '/thread/$threadId',
   path: '/thread/$threadId',
   getParentRoute: () => ChatRoute,
-} as any)
-const ApiAuthSplatServerRoute = ApiAuthSplatServerRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
-  getParentRoute: () => rootServerRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -269,27 +261,6 @@ export interface RootRouteChildren {
   AboutLazyRoute: typeof AboutLazyRoute
   PrivacyPolicyLazyRoute: typeof PrivacyPolicyLazyRoute
   AuthPathnameLazyRoute: typeof AuthPathnameLazyRoute
-}
-export interface FileServerRoutesByFullPath {
-  '/api/auth/$': typeof ApiAuthSplatServerRoute
-}
-export interface FileServerRoutesByTo {
-  '/api/auth/$': typeof ApiAuthSplatServerRoute
-}
-export interface FileServerRoutesById {
-  __root__: typeof rootServerRouteImport
-  '/api/auth/$': typeof ApiAuthSplatServerRoute
-}
-export interface FileServerRouteTypes {
-  fileServerRoutesByFullPath: FileServerRoutesByFullPath
-  fullPaths: '/api/auth/$'
-  fileServerRoutesByTo: FileServerRoutesByTo
-  to: '/api/auth/$'
-  id: '__root__' | '/api/auth/$'
-  fileServerRoutesById: FileServerRoutesById
-}
-export interface RootServerRouteChildren {
-  ApiAuthSplatServerRoute: typeof ApiAuthSplatServerRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -422,17 +393,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-declare module '@tanstack/react-start/server' {
-  interface ServerFileRoutesByPath {
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
-  }
-}
 
 interface ChatRouteChildren {
   ChatLibraryRoute: typeof ChatLibraryRoute
@@ -487,9 +447,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-const rootServerRouteChildren: RootServerRouteChildren = {
-  ApiAuthSplatServerRoute: ApiAuthSplatServerRoute,
-}
-export const serverRouteTree = rootServerRouteImport
-  ._addFileChildren(rootServerRouteChildren)
-  ._addFileTypes<FileServerRouteTypes>()
